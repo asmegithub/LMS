@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: LMS
+  datasource:
+    url: jdbc:mysql://localhost:3306/LMS?createDatabaseIfNotExist=true
+    username: root
+    password: mysql--2123
+    driver-class-name: com.mysql.cj.jdbc.Driver
