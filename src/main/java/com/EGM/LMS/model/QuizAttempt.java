@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -62,10 +64,11 @@ public class QuizAttempt {
     private LocalDateTime startedAt;
 
     /** * When the student submitted the quiz */
-    private LocalDateTime completedAt;
-
-    /** * Timestamp of record creation */
+    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---
 }

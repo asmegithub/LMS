@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -39,6 +41,8 @@ public class Lesson {
     private String title;
     private String titleAm;
     private String titleOm;
+    private String titleGz;
+
 
     /** * Content classification (e.g., VIDEO, DOCUMENT, QUIZ, TEXT) */
     private String type; // Recommended: Use an Enum
@@ -79,9 +83,10 @@ public class Lesson {
     private Boolean isPublished;
 
     /** * Timestamp of record creation */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last content update */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---

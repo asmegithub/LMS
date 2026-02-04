@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -44,7 +46,9 @@ public class Bookmark {
 
     /** * Foreign Key linking to the specific Lesson being bookmarked
      */
-    private String lessonId;
+    @ManyToOne
+    @JoinColumn(name = "lesson_id")
+    private Lesson lesson;
 
     /** * Specific time point in seconds (for video lessons) or order index
      */
@@ -56,7 +60,10 @@ public class Bookmark {
 
     /** * Timestamp of record creation with millisecond precision
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     // --- Standard Constructors, Getters, and Setters ---
 }

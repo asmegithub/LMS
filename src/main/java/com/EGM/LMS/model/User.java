@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -99,10 +101,10 @@ public class User {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last update to the user profile
-     */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -47,6 +49,9 @@ public class CourseSection {
     /** * Section title in Oromo
      */
     private String titleOm;
+    /** * Section title in Geez
+     */
+    private String titleGz;
 
     /** * Optional detailed description of what this section covers
      */
@@ -58,11 +63,13 @@ public class CourseSection {
 
     /** * Timestamp of record creation
      */
-    private LocalDateTime createdAt;
 
     /** * Timestamp of the last update to the section
      */
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     // --- Standard Constructors, Getters, and Setters ---
 }

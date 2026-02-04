@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -41,6 +43,8 @@ public class Question {
     private String questionText;
     private String questionTextAm;
     private String questionTextOm;
+    private String questionTextGz;
+
 
     /** * Question format (e.g., MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER)
      */
@@ -51,6 +55,8 @@ public class Question {
     private String explanation;
     private String explanationAm;
     private String explanationOm;
+    private String explanationGz;
+
 
     /** * Number of points or weight assigned to this specific question
      */
@@ -66,10 +72,10 @@ public class Question {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last update to the question content
-     */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---

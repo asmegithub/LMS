@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -47,6 +49,9 @@ public class CourseRequirement {
     /** * Requirement text in Oromo
      */
     private String textOm;
+    /** * Requirement text in Geez
+     */
+    private String textGz;
 
     /** * The position of the requirement in a list (used for UI display sorting)
      */
@@ -54,7 +59,10 @@ public class CourseRequirement {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     // --- Standard Constructors, Getters, and Setters ---
 }

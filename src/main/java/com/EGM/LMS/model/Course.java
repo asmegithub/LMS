@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import com.EGM.LMS.model.CourseCategory;
 
@@ -44,6 +46,8 @@ public class Course {
     private String title;
     private String titleAm;
     private String titleOm;
+    private String titleGz;
+
 
     /** URL-friendly identifier */
     private String slug;
@@ -52,6 +56,7 @@ public class Course {
     private String description;
     private String descriptionAm;
     private String descriptionOm;
+    private String descriptionGz;
 
     /** Media resources URLs */
     private String thumbnail;
@@ -67,11 +72,11 @@ public class Course {
     private String status; // Map to Enum if preferred (e.g., PUBLISHED, DRAFT)
 
     /** Metrics and Stats */
-    private Integer totalDuration;
-    private Integer totalLessons;
-    private Integer enrollmentCount;
+    private int totalDuration;
+    private int totalLessons;
+    private int enrollmentCount;
     private BigDecimal averageRating;
-    private Integer totalReviews;
+    private int totalReviews;
 
     /** Flags */
     private Boolean isFeatured;
@@ -80,8 +85,11 @@ public class Course {
     /** Management Timestamps */
     private LocalDateTime publishedAt;
     private LocalDateTime rejectedAt;
-    private String rejectionReason;
+    
+    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Constructors, Getters, and Setters would go here ---

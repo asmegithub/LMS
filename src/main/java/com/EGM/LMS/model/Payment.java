@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -34,7 +36,9 @@ public class Payment {
     private String transactionId;
 
     /** * Foreign Key linking to the User (Student) */
-    private String studentId;
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
 
     /** * Foreign Key linking to the Course purchased */
     @ManyToOne
@@ -63,7 +67,9 @@ public class Payment {
     private BigDecimal instructorShare;
 
     /** * Foreign Key linking to a used Coupon (if any) */
-    private String couponId;
+    @ManyToOne
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
 
     /** * Total discount value subtracted from the original price */
     private BigDecimal discountAmount;
@@ -84,9 +90,11 @@ public class Payment {
     private LocalDateTime paidAt;
 
     /** * Timestamp of record creation */
+
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last update to the record */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -31,7 +33,9 @@ public class Enrollment {
     private UUID id;
 
     /** * Foreign Key linking to the User (Student) */
-    private String studentId;
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
 
     /** * Foreign Key linking to the Course */
     @ManyToOne
@@ -39,7 +43,9 @@ public class Enrollment {
     private Course course;
 
     /** * Foreign Key linking to the associated Payment transaction */
-    private String paymentId;
+    @ManyToOne
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
 
     /** * Overall course completion percentage (e.g., 75.50) */
     private BigDecimal progress;
@@ -51,7 +57,7 @@ public class Enrollment {
     private String lastAccessedLessonId;
 
     /** * Flag indicating if the student has finished the entire course */
-    private Boolean isCompleted;
+    private boolean isCompleted;
 
     /** * Timestamp of when the student finished the course */
     private LocalDateTime completedAt;
@@ -60,7 +66,10 @@ public class Enrollment {
     private LocalDateTime enrolledAt;
 
     /** * Timestamp of the last progress update */
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     // --- Standard Constructors, Getters, and Setters ---
 }

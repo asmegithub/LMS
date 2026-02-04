@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -41,6 +43,8 @@ public class LessonResource {
     private String title;
     private String titleAm;
     private String titleOm;
+    private String titleGz;
+
 
     /** * File category (e.g., "PDF", "ZIP", "DOCX")
      */
@@ -60,7 +64,11 @@ public class LessonResource {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---
 }

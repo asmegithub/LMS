@@ -1,0 +1,9 @@
+package com.EGM.LMS.repository;
+
+import com.EGM.LMS.model.LessonNote;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+
+public interface LessonNoteRepository extends JpaRepository<LessonNote, UUID> {
+}

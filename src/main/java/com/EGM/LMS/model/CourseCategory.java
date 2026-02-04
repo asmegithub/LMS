@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 //import com.EGM.LMS.model.CourseCategory;
@@ -45,6 +47,10 @@ public class CourseCategory {
      */
     private String nameOm;
 
+    /** * Localized name in geez
+     */
+    private String nameGz;
+
     /** * URL-friendly identifier
      */
     private String slug;
@@ -71,10 +77,10 @@ public class CourseCategory {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last update
-     */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Constructors, Getters, and Setters ---

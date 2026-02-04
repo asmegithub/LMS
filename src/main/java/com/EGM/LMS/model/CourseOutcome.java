@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -42,12 +44,17 @@ public class CourseOutcome {
 
     /** * Outcome text in Oromo */
     private String textOm;
+    /** * Outcome text in Geez */
+    private String textGz;
 
     /** * Order of appearance in the UI list */
     private int orderIndex;
 
     /** * Creation timestamp with millisecond precision */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     // --- Constructors, Getters, and Setters ---
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -36,11 +38,13 @@ public class Review {
 
     /** * Foreign Key linking to the User (Student) who wrote the review
      */
-    private String studentId;
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
 
     /** * Numerical rating (e.g., 1 to 5)
      */
-    private Integer rating;
+    private int rating;
 
     /** * Short headline or title of the review
      */
@@ -52,7 +56,7 @@ public class Review {
 
     /** * Flag to control if the review is displayed publicly
      */
-    private Boolean isVisible;
+    private boolean isVisible;
 
     /** * Counter for how many users found this review useful
      */
@@ -60,10 +64,10 @@ public class Review {
 
     /** * Timestamp of record creation
      */
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    /** * Timestamp of the last update to the review
-     */
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     // --- Standard Constructors, Getters, and Setters ---

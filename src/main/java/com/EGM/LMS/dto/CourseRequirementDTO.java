@@ -1,0 +1,26 @@
+package com.EGM.LMS.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class CourseRequirementDTO {
+
+    private UUID id;
+    private CourseDTO course;
+    private String text;
+    private String textAm;
+    private String textOm;
+    private String textGz;
+    private int orderIndex;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
