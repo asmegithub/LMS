@@ -2,6 +2,7 @@ package com.EGM.LMS.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "reviews")
+@Builder
 public class Review {
 
     /** * Primary Key
@@ -56,7 +58,7 @@ public class Review {
 
     /** * Flag to control if the review is displayed publicly
      */
-    private boolean isVisible;
+    private boolean visible;
 
     /** * Counter for how many users found this review useful
      */

@@ -20,7 +20,7 @@ public class ReviewDTO {
     private int rating;
     private String title;
     private String content;
-    private boolean isVisible;
+    private boolean visible;
     private int helpfulCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

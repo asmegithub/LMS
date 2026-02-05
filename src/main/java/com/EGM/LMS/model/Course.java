@@ -34,12 +34,13 @@ public class Course {
     
     /** Foreign Key linking to the Instructor Profile */
 
+
     @ManyToOne
-    @JoinColumn(name="instructorId",referencedColumnName = "id")
-    private User instructor;
+    @JoinColumn(name = "instructor_id")
+    private InstructorProfile instructor;
     /** Foreign Key linking to the Course Category */
     @ManyToOne
-    @JoinColumn(name = "category_id", referencedColumnName = "id")
+    @JoinColumn(name = "category_id")
     private CourseCategory category;
 
     /** Localized titles (English, Amharic, Oromo) */
@@ -74,13 +75,22 @@ public class Course {
     /** Metrics and Stats */
     private int totalDuration;
     private int totalLessons;
-    private int enrollmentCount;
-    private BigDecimal averageRating;
-    private int totalReviews;
+    @Builder.Default
+    private int enrollmentCount=0;
+
+    @Builder.Default
+    private BigDecimal averageRating=new BigDecimal(0);
+
+    @Builder.Default
+    private int totalReviews=0;
 
     /** Flags */
-    private Boolean isFeatured;
-    private Boolean isPopular;
+    @Builder.Default
+    private boolean isFeatured=false;
+    @Builder.Default
+    private boolean isPopular=false;
+    @Builder.Default
+    private boolean isPublished=false;
 
     /** Management Timestamps */
     private LocalDateTime publishedAt;

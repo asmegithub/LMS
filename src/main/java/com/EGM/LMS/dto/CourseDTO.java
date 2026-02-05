@@ -21,8 +21,11 @@ public class CourseDTO {
     /** Foreign Key linking to the Instructor Profile */
 
     private UserDTO instructor;
+    private UUID instructorId;
 
     private CourseCategory category;
+    private UUID categoryId;
+
 
     /** Localized titles (English, Amharic, Oromo) */
     private String title;
