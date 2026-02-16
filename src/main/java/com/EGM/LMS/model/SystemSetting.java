@@ -6,8 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -29,15 +31,18 @@ public class SystemSetting {
     @Id
     @GeneratedValue
     @UuidGenerator
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(columnDefinition = "CHAR(36)")
     private UUID id;
 
     /** * Unique identifier for the setting (e.g., "SITE_NAME", "REFUND_PERIOD_DAYS")
      */
+    @Column(name = "setting_key")
     private String key;
 
     /** * The value of the setting, stored as JSON to support strings, numbers, or arrays
      */
+    @Column(name = "setting_value")
     private String value; // Mapped from JSON
 
     /** * Explains what this setting controls for other administrators

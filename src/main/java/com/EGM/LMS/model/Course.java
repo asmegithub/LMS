@@ -10,9 +10,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import com.EGM.LMS.model.CourseCategory;
+import org.hibernate.type.SqlTypes;
 
 
 @Data
@@ -29,6 +30,7 @@ public class Course {
     @Id
     @GeneratedValue
     @UuidGenerator
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(columnDefinition = "CHAR(36)")
     private UUID id;
     

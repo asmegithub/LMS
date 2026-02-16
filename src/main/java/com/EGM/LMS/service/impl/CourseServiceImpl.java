@@ -17,6 +17,8 @@ public class CourseServiceImpl implements CourseService {
     private final CourseCategoryRepository courseCategoryRepository;
     private final InstructorProfileRepository instructorProfileRepository;
     private  final CourseRepository courseRepository;
+    // 
+    private final CourseCategoryServiceImpl courseCategoryServiceImpl;
 
     @Override
     public CourseDTO createCourse(CourseDTO coursedto) {
@@ -102,9 +104,14 @@ public class CourseServiceImpl implements CourseService {
     }
 
     CourseDTO toDto(Course course){
+        // 
         return CourseDTO.builder()
                 .id(course.getId())
-                .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
+                .category(
+                        course.getCategory() != null ?
+                                courseCategoryServiceImpl.toDto(courseCategoryRepository.findById(course.getCategory().getId()).orElseThrow())
+                                : null
+                )
                 .instructorId(course.getInstructor() != null ? course.getInstructor().getId() : null)
                 .title(course.getTitle())
                 .titleAm(course.getTitleAm())

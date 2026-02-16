@@ -1,5 +1,7 @@
 package com.EGM.LMS.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +26,8 @@ public class CourseCategoryDTO {
     private String icon;
     private String parentId;
     private int orderIndex;
+    @JsonProperty("isActive")
+    @JsonAlias("active")
     private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

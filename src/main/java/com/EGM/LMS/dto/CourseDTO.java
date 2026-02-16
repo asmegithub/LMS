@@ -23,7 +23,7 @@ public class CourseDTO {
     private UserDTO instructor;
     private UUID instructorId;
 
-    private CourseCategory category;
+    private CourseCategoryDTO category;
     private UUID categoryId;
 
 

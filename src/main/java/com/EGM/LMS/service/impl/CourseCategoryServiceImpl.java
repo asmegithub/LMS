@@ -63,7 +63,7 @@ public class CourseCategoryServiceImpl implements CourseCategoryService {
                 .build();
     }
 
-    private CourseCategoryDTO toDto(CourseCategory courseCategory) {
+    CourseCategoryDTO toDto(CourseCategory courseCategory) {
         return CourseCategoryDTO.builder()
                 .id(courseCategory.getId())
                 .name(courseCategory.getName())
