@@ -2,13 +2,17 @@ package com.EGM.LMS.service.impl;
 
 import com.EGM.LMS.dto.CourseDTO;
 import com.EGM.LMS.model.Course;
+import com.EGM.LMS.model.InstructorProfile;
 import com.EGM.LMS.repository.CourseCategoryRepository;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
+import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -16,6 +20,7 @@ import java.util.*;
 public class CourseServiceImpl implements CourseService {
     private final CourseCategoryRepository courseCategoryRepository;
     private final InstructorProfileRepository instructorProfileRepository;
+    private final UserRepository userRepository;
     private  final CourseRepository courseRepository;
     // 
     private final CourseCategoryServiceImpl courseCategoryServiceImpl;
@@ -31,6 +36,21 @@ public class CourseServiceImpl implements CourseService {
         var coursesDtos= new ArrayList<CourseDTO>();
         for (Course c:courses){
             coursesDtos.add(toDto(c));
+        }
+        return coursesDtos;
+    }
+
+    @Override
+    public List<CourseDTO> getCoursesByStatus(String status) {
+        var normalizedStatus = status == null ? null : status.trim().toUpperCase();
+        if (normalizedStatus == null || normalizedStatus.isBlank()) {
+            return getAllCourses();
+        }
+
+        var courses = courseRepository.findByStatus(normalizedStatus);
+        var coursesDtos = new ArrayList<CourseDTO>();
+        for (Course course : courses) {
+            coursesDtos.add(toDto(course));
         }
         return coursesDtos;
     }
@@ -60,10 +80,15 @@ public class CourseServiceImpl implements CourseService {
         existingCourse.setCurrency(coursedto.getCurrency());
         existingCourse.setLevel(coursedto.getLevel());
         existingCourse.setStatus(coursedto.getStatus());
-        existingCourse.setTotalLessons(coursedto.getTotalLessons());
+        existingCourse.setTotalLessons(coursedto.getTotalLessons() != null ? coursedto.getTotalLessons() : 0);
+        existingCourse.setTotalDuration(coursedto.getTotalDuration() != null ? coursedto.getTotalDuration() : 0);
         existingCourse.setSlug(coursedto.getSlug());
         existingCourse.setCategory(courseCategoryRepository.findById(coursedto.getCategoryId()).orElse(null));
-        existingCourse.setInstructor(instructorProfileRepository.findById(coursedto.getInstructorId()).orElse(null));
+
+        var resolvedInstructor = resolveInstructor(coursedto);
+        if (resolvedInstructor != null) {
+            existingCourse.setInstructor(resolvedInstructor);
+        }
 
         return toDto(courseRepository.save(existingCourse));
     }
@@ -77,14 +102,15 @@ public class CourseServiceImpl implements CourseService {
     Course toEntity(CourseDTO coursedto){
         return Course.builder()
                 .category(courseCategoryRepository.findById(coursedto.getCategoryId()).orElse(null))
-                .instructor(instructorProfileRepository.findById(coursedto.getInstructorId()).orElse(null))
+                .instructor(resolveInstructor(coursedto))
                 .title(coursedto.getTitle())
                 .titleAm(coursedto.getTitleAm())
                 .titleGz(coursedto.getTitleGz())
                 .titleOm(coursedto.getTitleOm())
 
                 .slug(coursedto.getSlug())
-                .totalLessons(coursedto.getTotalLessons())
+                .totalDuration(coursedto.getTotalDuration() != null ? coursedto.getTotalDuration() : 0)
+                .totalLessons(coursedto.getTotalLessons() != null ? coursedto.getTotalLessons() : 0)
 
                 .thumbnail(coursedto.getThumbnail())
                 .previewVideo(coursedto.getPreviewVideo())
@@ -92,7 +118,7 @@ public class CourseServiceImpl implements CourseService {
                 .status(coursedto.getStatus())
 
                 .description(coursedto.getDescription())
-                .descriptionAm(coursedto.getDescription())
+                .descriptionAm(coursedto.getDescriptionAm())
                 .descriptionGz(coursedto.getDescriptionGz())
                 .descriptionOm(coursedto.getDescriptionOm())
 
@@ -107,18 +133,24 @@ public class CourseServiceImpl implements CourseService {
         // 
         return CourseDTO.builder()
                 .id(course.getId())
+            .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .category(
                         course.getCategory() != null ?
                                 courseCategoryServiceImpl.toDto(courseCategoryRepository.findById(course.getCategory().getId()).orElseThrow())
                                 : null
                 )
-                .instructorId(course.getInstructor() != null ? course.getInstructor().getId() : null)
+            .instructorId(
+                course.getInstructor() != null && course.getInstructor().getUser() != null
+                    ? course.getInstructor().getUser().getId()
+                    : null
+            )
                 .title(course.getTitle())
                 .titleAm(course.getTitleAm())
                 .titleGz(course.getTitleGz())
                 .titleOm(course.getTitleOm())
 
                 .slug(course.getSlug())
+                .totalDuration(course.getTotalDuration())
                 .totalLessons(course.getTotalLessons())
 
                 .thumbnail(course.getThumbnail())
@@ -134,10 +166,46 @@ public class CourseServiceImpl implements CourseService {
                 .price(course.getPrice())
                 .discountPrice(course.getDiscountPrice())
                 .currency(course.getCurrency())
-
+                .isFeatured(course.isFeatured())
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .build();
+    }
+
+    private InstructorProfile resolveInstructor(CourseDTO coursedto) {
+        if (coursedto.getInstructorId() != null) {
+            var instructorByProfileId = instructorProfileRepository.findById(coursedto.getInstructorId());
+            if (instructorByProfileId.isPresent()) {
+                return instructorByProfileId.get();
+            }
+
+            var instructorByUserId = instructorProfileRepository.findFirstByUser_Id(coursedto.getInstructorId());
+            if (instructorByUserId.isPresent()) {
+                return instructorByUserId.get();
+            }
+        }
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            return null;
+        }
+
+        var user = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (user == null) {
+            return null;
+        }
+
+        return instructorProfileRepository.findFirstByUser_Id(user.getId())
+                .orElseGet(() -> instructorProfileRepository.save(InstructorProfile.builder()
+                        .user(user)
+                        .headline(user.getFirstName() != null ? user.getFirstName() : "")
+                        .biography("")
+                        .totalStudents(0)
+                        .totalCourses(0)
+                        .totalRevenue(BigDecimal.ZERO)
+                        .averageRating(BigDecimal.ZERO)
+                        .isVerified(false)
+                        .build()));
     }
 
 

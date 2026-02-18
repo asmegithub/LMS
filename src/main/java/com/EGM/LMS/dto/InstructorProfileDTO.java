@@ -27,11 +27,11 @@ public class InstructorProfileDTO {
     private String biographyGz;
     private String expertise;
     private String socialLinks;
-    private int totalStudents;
-    private int totalCourses;
+    private Integer totalStudents;
+    private Integer totalCourses;
     private BigDecimal totalRevenue;
     private BigDecimal averageRating;
-    private boolean isVerified;
+    private Boolean isVerified;
     private LocalDateTime verifiedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -59,7 +59,7 @@ public class CourseOutcomeServiceImpl implements CourseOutcomeService {
                 .textAm(courseOutcome.getTextAm())
                 .textOm(courseOutcome.getTextOm())
                 .textGz(courseOutcome.getTextGz())
-                .orderIndex(courseOutcome.getOrderIndex())
+            .orderIndex(courseOutcome.getOrderIndex() != null ? courseOutcome.getOrderIndex() : 0)
                 .build();
     }
 

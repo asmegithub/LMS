@@ -1,6 +1,5 @@
 package com.EGM.LMS.dto;
 
-import com.EGM.LMS.model.CourseCategory;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,11 +56,11 @@ public class CourseDTO {
     private String status; // Map to Enum if preferred (e.g., PUBLISHED, DRAFT)
 
     /** Metrics and Stats */
-    private int totalDuration;
-    private int totalLessons;
-    private int enrollmentCount;
+    private Integer totalDuration;
+    private Integer totalLessons;
+    private Integer enrollmentCount;
     private BigDecimal averageRating;
-    private int totalReviews;
+    private Integer totalReviews;
 
     /** Flags */
     private Boolean isFeatured;

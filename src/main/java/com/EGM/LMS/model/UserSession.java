@@ -45,10 +45,12 @@ public class UserSession {
 
     /** * The short-lived JWT or access token
      */
+    @Column(columnDefinition = "TEXT")
     private String token;
 
     /** * Long-lived token used to generate new access tokens
      */
+    @Column(columnDefinition = "TEXT")
     private String refreshToken;
 
     /** * Categorizes the device (e.g., "Mobile", "Web", "Tablet")

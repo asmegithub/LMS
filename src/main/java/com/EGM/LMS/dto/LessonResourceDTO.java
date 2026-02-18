@@ -22,8 +22,8 @@ public class LessonResourceDTO {
     private String titleGz;
     private String type;
     private String url;
-    private int fileSize;
-    private int orderIndex;
+    private Integer fileSize;
+    private Integer orderIndex;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

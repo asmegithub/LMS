@@ -21,7 +21,7 @@ public class CourseSectionDTO {
     private String titleOm;
     private String titleGz;
     private String description;
-    private int orderIndex;
+    private Integer orderIndex;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

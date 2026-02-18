@@ -61,8 +61,8 @@ public class LessonResourceServiceImpl implements LessonResourceService {
                 .titleGz(lessonResource.getTitleGz())
                 .type(lessonResource.getType())
                 .url(lessonResource.getUrl())
-                .fileSize(lessonResource.getFileSize())
-                .orderIndex(lessonResource.getOrderIndex())
+                .fileSize(lessonResource.getFileSize() != null ? lessonResource.getFileSize() : 0)
+                .orderIndex(lessonResource.getOrderIndex() != null ? lessonResource.getOrderIndex() : 0)
                 .build();
     }
 

@@ -59,7 +59,7 @@ public class CourseRequirementServiceImpl implements CourseRequirementService {
                 .textAm(courseRequirement.getTextAm())
                 .textOm(courseRequirement.getTextOm())
                 .textGz(courseRequirement.getTextGz())
-                .orderIndex(courseRequirement.getOrderIndex())
+            .orderIndex(courseRequirement.getOrderIndex() != null ? courseRequirement.getOrderIndex() : 0)
                 .build();
     }
 

@@ -8,15 +8,102 @@ import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.InstructorProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
 public class InstructorProfileServiceImpl implements InstructorProfileService {
     private final InstructorProfileRepository instructorProfileRepository;
     private final UserRepository userRepository;
+
+    @Override
+    public InstructorProfileDTO applyInstructorProfile(InstructorProfileDTO instructorProfile, String userEmail) {
+        if (userEmail == null || userEmail.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "User authentication required.");
+        }
+
+        var user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found."));
+
+        var profile = instructorProfileRepository.findFirstByUser_Id(user.getId())
+                .orElseGet(() -> InstructorProfile.builder()
+                        .user(user)
+                        .totalStudents(0)
+                        .totalCourses(0)
+                        .totalRevenue(BigDecimal.ZERO)
+                        .averageRating(BigDecimal.ZERO)
+                        .isVerified(false)
+                        .build());
+
+        profile.setHeadline(instructorProfile.getHeadline());
+        profile.setHeadlineAm(instructorProfile.getHeadlineAm());
+        profile.setHeadlineOm(instructorProfile.getHeadlineOm());
+        profile.setHeadlineGz(instructorProfile.getHeadlineGz());
+        profile.setBiography(instructorProfile.getBiography());
+        profile.setBiographyAm(instructorProfile.getBiographyAm());
+        profile.setBiographyOm(instructorProfile.getBiographyOm());
+        profile.setBiographyGz(instructorProfile.getBiographyGz());
+        profile.setExpertise(instructorProfile.getExpertise());
+        profile.setSocialLinks(instructorProfile.getSocialLinks());
+        profile.setVerified(false);
+        profile.setVerifiedAt(null);
+
+        return toDto(instructorProfileRepository.save(profile));
+    }
+
+    @Override
+    public InstructorProfileDTO getMyInstructorProfile(String userEmail) {
+        if (userEmail == null || userEmail.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "User authentication required.");
+        }
+
+        var user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found."));
+
+        var profile = instructorProfileRepository.findFirstByUser_Id(user.getId()).orElse(null);
+        if (profile == null) {
+            return null;
+        }
+
+        return toDto(profile);
+    }
+
+    @Override
+    public List<InstructorProfileDTO> getPendingInstructorProfiles() {
+        var profiles = instructorProfileRepository.findAll().stream()
+                .filter(profile -> !profile.isVerified())
+                .toList();
+
+        var profileDtos = new java.util.ArrayList<InstructorProfileDTO>();
+        for (InstructorProfile profile : profiles) {
+            profileDtos.add(toDto(profile));
+        }
+        return profileDtos;
+    }
+
+    @Override
+    public InstructorProfileDTO verifyInstructorProfile(UUID instructorProfileId, boolean verified) {
+        var profile = instructorProfileRepository.findById(instructorProfileId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Instructor profile not found."));
+
+        profile.setVerified(verified);
+        profile.setVerifiedAt(verified ? java.time.LocalDateTime.now() : null);
+
+        var user = profile.getUser();
+        if (user != null) {
+            user.setRole(verified ? "INSTRUCTOR" : "STUDENT");
+            userRepository.save(user);
+        }
+
+        return toDto(instructorProfileRepository.save(profile));
+    }
 
     @Override
     public InstructorProfileDTO createInstructorProfile(InstructorProfileDTO instructorProfile) {
@@ -65,11 +152,11 @@ public class InstructorProfileServiceImpl implements InstructorProfileService {
                 .biographyGz(instructorProfile.getBiographyGz())
                 .expertise(instructorProfile.getExpertise())
                 .socialLinks(instructorProfile.getSocialLinks())
-                .totalStudents(instructorProfile.getTotalStudents())
-                .totalCourses(instructorProfile.getTotalCourses())
-                .totalRevenue(instructorProfile.getTotalRevenue())
-                .averageRating(instructorProfile.getAverageRating())
-                .isVerified(instructorProfile.isVerified())
+                .totalStudents(instructorProfile.getTotalStudents() != null ? instructorProfile.getTotalStudents() : 0)
+                .totalCourses(instructorProfile.getTotalCourses() != null ? instructorProfile.getTotalCourses() : 0)
+                .totalRevenue(instructorProfile.getTotalRevenue() != null ? instructorProfile.getTotalRevenue() : BigDecimal.ZERO)
+                .averageRating(instructorProfile.getAverageRating() != null ? instructorProfile.getAverageRating() : BigDecimal.ZERO)
+                .isVerified(Boolean.TRUE.equals(instructorProfile.getIsVerified()))
                 .verifiedAt(instructorProfile.getVerifiedAt())
                 .build();
     }

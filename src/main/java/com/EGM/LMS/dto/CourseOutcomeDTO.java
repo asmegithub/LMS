@@ -20,7 +20,7 @@ public class CourseOutcomeDTO {
     private String textAm;
     private String textOm;
     private String textGz;
-    private int orderIndex;
+    private Integer orderIndex;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

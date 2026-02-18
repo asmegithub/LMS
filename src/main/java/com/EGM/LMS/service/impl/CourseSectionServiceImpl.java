@@ -60,7 +60,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
                 .titleOm(courseSection.getTitleOm())
                 .titleGz(courseSection.getTitleGz())
                 .description(courseSection.getDescription())
-                .orderIndex(courseSection.getOrderIndex())
+            .orderIndex(courseSection.getOrderIndex() != null ? courseSection.getOrderIndex() : 0)
                 .build();
     }
 

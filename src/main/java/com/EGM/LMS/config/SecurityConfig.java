@@ -33,9 +33,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/course-categories/**").permitAll()
-                        .anyRequest().authenticated()
+                    .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/course-categories/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/course-sections/**", "/api/lessons/**", "/api/reviews/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/course-outcomes/**", "/api/course-requirements/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/lesson-discussions/**", "/api/discussion-replies/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                    .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth.successHandler(oAuth2LoginSuccessHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

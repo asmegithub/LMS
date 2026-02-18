@@ -20,8 +20,11 @@ public class CourseController {
         return ResponseEntity.ok(courseService.createCourse(coursedto));
     }
     @GetMapping
-    ResponseEntity<List<CourseDTO>> getAllCourses(){
-        return ResponseEntity.ok(courseService.getAllCourses());
+    ResponseEntity<List<CourseDTO>> getAllCourses(@RequestParam(required = false) String status){
+        if (status == null || status.isBlank()) {
+            return ResponseEntity.ok(courseService.getAllCourses());
+        }
+        return ResponseEntity.ok(courseService.getCoursesByStatus(status));
     }
     @GetMapping("/{courseId}")
     ResponseEntity<CourseDTO> getCourse(@PathVariable UUID courseId){
