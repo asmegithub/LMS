@@ -132,7 +132,7 @@ public class CourseServiceImpl implements CourseService {
 
     CourseDTO toDto(Course course){
         // instructor
-        System.out.println("Course Instructor: " + (course.getInstructor()));
+        var instructor = course.getInstructor();
         return CourseDTO.builder()
                 .id(course.getId())
             .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
@@ -142,17 +142,20 @@ public class CourseServiceImpl implements CourseService {
                                 : null
                 )
             .instructor(InstructorProfileDTO.builder()
-                    .id(course.getInstructor() != null ? course.getInstructor().getId() : null)
-                    .user(course.getInstructor() != null ? UserDTO.builder()
-                            .id(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getId() : null)
-                            .email(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getEmail() : null)
-                            .firstName(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getFirstName() : null)
-                            .lastName(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getLastName() : null)
+                    .id(instructor != null ? instructor.getId() : null)
+                    .user(instructor != null ? UserDTO.builder()
+                            .id(instructor.getUser() != null ? instructor.getUser().getId() : null)
+                            .email(instructor.getUser() != null ? instructor.getUser().getEmail() : null)
+                            .firstName(instructor.getUser() != null ? instructor.getUser().getFirstName() : null)
+                            .lastName(instructor.getUser() != null ? instructor.getUser().getLastName() : null)
 
                             .build() : null)
-                    .headline(course.getInstructor() != null ? course.getInstructor().getHeadline() : null)
-                    .averageRating(course.getInstructor() != null ? course.getInstructor().getAverageRating() : BigDecimal.ZERO)
-                    .isVerified(course.getInstructor() != null && course.getInstructor().isVerified())
+                    .headline(instructor != null ? instructor.getHeadline() : null)
+                    .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
+                    .isVerified(instructor != null && instructor.isVerified())
+                    .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
+                    .totalCourses(instructor!=null?instructor.getTotalCourses():0)
+                    .totalStudents(instructor!=null?instructor.getTotalStudents():0)
                     .build())
                 .title(course.getTitle())
                 .titleAm(course.getTitleAm())

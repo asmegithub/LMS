@@ -20,9 +20,9 @@ public class EnrollmentDTO {
     private CourseDTO course;
     private PaymentDTO payment;
     private BigDecimal progress;
-    private int completedLessonsCount;
+    private Integer completedLessonsCount;
     private String lastAccessedLessonId;
-    private boolean isCompleted;
+    private Boolean isCompleted;
     private LocalDateTime completedAt;
     private LocalDateTime enrolledAt;
     private LocalDateTime createdAt;

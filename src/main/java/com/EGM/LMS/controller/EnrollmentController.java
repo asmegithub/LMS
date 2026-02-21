@@ -1,12 +1,14 @@
 package com.EGM.LMS.controller;
 
 import com.EGM.LMS.dto.EnrollmentDTO;
+import com.EGM.LMS.dto.InstructorEnrollmentSummaryDTO;
 import com.EGM.LMS.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -23,6 +25,21 @@ public class EnrollmentController {
     @GetMapping
     ResponseEntity<List<EnrollmentDTO>> getAllEnrollments() {
         return ResponseEntity.ok(enrollmentService.getAllEnrollments());
+    }
+
+    @GetMapping("/me")
+    ResponseEntity<?> getMyEnrollments(@RequestParam(required = false) UUID courseId) {
+        if (courseId != null) {
+            Optional<EnrollmentDTO> enrollment = enrollmentService.getMyEnrollmentByCourse(courseId);
+            return enrollment.<ResponseEntity<?>>map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.noContent().build());
+        }
+        return ResponseEntity.ok(enrollmentService.getMyEnrollments());
+    }
+
+    @GetMapping("/me/instructor-summary")
+    ResponseEntity<InstructorEnrollmentSummaryDTO> getMyInstructorEnrollmentSummary() {
+        return ResponseEntity.ok(enrollmentService.getMyInstructorEnrollmentSummary());
     }
 
     @GetMapping("/{enrollmentId}")

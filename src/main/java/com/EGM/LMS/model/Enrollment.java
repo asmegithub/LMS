@@ -22,7 +22,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "enrollments")
+@Table(
+    name = "enrollments",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_enrollment_student_course", columnNames = {"student_id", "course_id"})
+    }
+)
 @Builder
 public class Enrollment {
 
