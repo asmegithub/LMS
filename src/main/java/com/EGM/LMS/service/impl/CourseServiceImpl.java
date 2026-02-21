@@ -1,6 +1,8 @@
 package com.EGM.LMS.service.impl;
 
 import com.EGM.LMS.dto.CourseDTO;
+import com.EGM.LMS.dto.InstructorProfileDTO;
+import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Course;
 import com.EGM.LMS.model.InstructorProfile;
 import com.EGM.LMS.repository.CourseCategoryRepository;
@@ -121,7 +123,6 @@ public class CourseServiceImpl implements CourseService {
                 .descriptionAm(coursedto.getDescriptionAm())
                 .descriptionGz(coursedto.getDescriptionGz())
                 .descriptionOm(coursedto.getDescriptionOm())
-
                 .price(coursedto.getPrice())
                 .discountPrice(coursedto.getDiscountPrice())
                 .currency(coursedto.getCurrency())
@@ -130,7 +131,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     CourseDTO toDto(Course course){
-        // 
+        // instructor
+        System.out.println("Course Instructor: " + (course.getInstructor()));
         return CourseDTO.builder()
                 .id(course.getId())
             .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
@@ -139,11 +141,19 @@ public class CourseServiceImpl implements CourseService {
                                 courseCategoryServiceImpl.toDto(courseCategoryRepository.findById(course.getCategory().getId()).orElseThrow())
                                 : null
                 )
-            .instructorId(
-                course.getInstructor() != null && course.getInstructor().getUser() != null
-                    ? course.getInstructor().getUser().getId()
-                    : null
-            )
+            .instructor(InstructorProfileDTO.builder()
+                    .id(course.getInstructor() != null ? course.getInstructor().getId() : null)
+                    .user(course.getInstructor() != null ? UserDTO.builder()
+                            .id(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getId() : null)
+                            .email(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getEmail() : null)
+                            .firstName(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getFirstName() : null)
+                            .lastName(course.getInstructor().getUser() != null ? course.getInstructor().getUser().getLastName() : null)
+
+                            .build() : null)
+                    .headline(course.getInstructor() != null ? course.getInstructor().getHeadline() : null)
+                    .averageRating(course.getInstructor() != null ? course.getInstructor().getAverageRating() : BigDecimal.ZERO)
+                    .isVerified(course.getInstructor() != null && course.getInstructor().isVerified())
+                    .build())
                 .title(course.getTitle())
                 .titleAm(course.getTitleAm())
                 .titleGz(course.getTitleGz())
@@ -167,6 +177,10 @@ public class CourseServiceImpl implements CourseService {
                 .discountPrice(course.getDiscountPrice())
                 .currency(course.getCurrency())
                 .isFeatured(course.isFeatured())
+                .isPopular(course.isPopular())
+                .averageRating(course.getAverageRating())
+                .enrollmentCount(course.getEnrollmentCount())
+                .totalReviews(course.getTotalReviews())
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .build();

@@ -19,7 +19,7 @@ public class CourseDTO {
     private UUID id;
     /** Foreign Key linking to the Instructor Profile */
 
-    private UserDTO instructor;
+    private InstructorProfileDTO instructor;
     private UUID instructorId;
 
     private CourseCategoryDTO category;
