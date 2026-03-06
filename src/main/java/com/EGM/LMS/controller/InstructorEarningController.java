@@ -20,6 +20,13 @@ public class InstructorEarningController {
         return ResponseEntity.ok(instructorEarningService.createInstructorEarning(instructorEarningDto));
     }
 
+    @GetMapping("/me")
+    ResponseEntity<InstructorEarningDTO> getMyEarning() {
+        return instructorEarningService.getMyEarning()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
     @GetMapping
     ResponseEntity<List<InstructorEarningDTO>> getAllInstructorEarnings() {
         return ResponseEntity.ok(instructorEarningService.getAllInstructorEarnings());

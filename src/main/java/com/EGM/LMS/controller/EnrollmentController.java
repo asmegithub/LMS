@@ -42,6 +42,11 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.getMyInstructorEnrollmentSummary());
     }
 
+    @GetMapping("/me/instructor-enrollments")
+    ResponseEntity<List<EnrollmentDTO>> getMyInstructorEnrollments() {
+        return ResponseEntity.ok(enrollmentService.getMyInstructorEnrollments());
+    }
+
     @GetMapping("/{enrollmentId}")
     ResponseEntity<EnrollmentDTO> getEnrollment(@PathVariable UUID enrollmentId) {
         return ResponseEntity.ok(enrollmentService.getEnrollment(enrollmentId));

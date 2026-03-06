@@ -1,5 +1,7 @@
 package com.EGM.LMS.controller;
 
+import com.EGM.LMS.dto.ChapaInitializeRequest;
+import com.EGM.LMS.dto.ChapaInitializeResponse;
 import com.EGM.LMS.dto.PaymentDTO;
 import com.EGM.LMS.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +22,29 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.createPayment(paymentDto));
     }
 
+    @PostMapping("/chapa/initialize")
+    ResponseEntity<ChapaInitializeResponse> chapaInitialize(@RequestBody ChapaInitializeRequest request) {
+        return ResponseEntity.ok(paymentService.initializeChapaPayment(request));
+    }
+
+    @GetMapping("/chapa/callback")
+    ResponseEntity<Void> chapaCallback(
+            @RequestParam(name = "trx_ref", required = false) String trxRef,
+            @RequestParam(name = "ref_id", required = false) String refId,
+            @RequestParam(name = "status", required = false) String status
+    ) {
+        paymentService.handleChapaCallback(trxRef, refId, status);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
-    ResponseEntity<List<PaymentDTO>> getAllPayments() {
+    ResponseEntity<List<PaymentDTO>> getPayments() {
         return ResponseEntity.ok(paymentService.getAllPayments());
+    }
+
+    @GetMapping("/me")
+    ResponseEntity<List<PaymentDTO>> getMyPayments() {
+        return ResponseEntity.ok(paymentService.getMyPayments());
     }
 
     @GetMapping("/{paymentId}")

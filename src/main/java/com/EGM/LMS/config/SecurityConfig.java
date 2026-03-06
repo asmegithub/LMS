@@ -39,6 +39,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/course-outcomes/**", "/api/course-requirements/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/lesson-discussions/**", "/api/discussion-replies/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
                     .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth.successHandler(oAuth2LoginSuccessHandler))

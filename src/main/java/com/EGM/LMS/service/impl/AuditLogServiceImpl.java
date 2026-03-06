@@ -7,6 +7,7 @@ import com.EGM.LMS.repository.AuditLogRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,24 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     public AuditLogDTO createAuditLog(AuditLogDTO auditLog) {
         return toDto(auditLogRepository.save(toEntity(auditLog)));
+    }
+
+    @Override
+    public void logAction(String action, String targetType, String targetId, String changes, String ipAddress, String userAgent) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) return;
+        var admin = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (admin == null) return;
+        var dto = AuditLogDTO.builder()
+                .admin(UserDTO.builder().id(admin.getId()).build())
+                .action(action)
+                .targetType(targetType)
+                .targetId(targetId != null ? targetId.toString() : null)
+                .changes(changes)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+        createAuditLog(dto);
     }
 
     @Override

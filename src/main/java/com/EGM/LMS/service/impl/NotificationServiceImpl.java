@@ -5,8 +5,10 @@ import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Notification;
 import com.EGM.LMS.repository.NotificationRepository;
 import com.EGM.LMS.repository.UserRepository;
+import com.EGM.LMS.model.User;
 import com.EGM.LMS.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,41 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationDTO createNotification(NotificationDTO notification) {
         return toDto(notificationRepository.save(toEntity(notification)));
+    }
+
+    @Override
+    public void notifyAdmins(String type, String title, String message, String relatedType, String relatedId, String actionUrl) {
+        var admins = userRepository.findByRoleIgnoreCase("ADMIN");
+        for (User admin : admins) {
+            var n = Notification.builder()
+                    .user(admin)
+                    .type(type != null ? type : "ADMIN_ALERT")
+                    .title(title)
+                    .message(message)
+                    .relatedType(relatedType)
+                    .relatedId(relatedId)
+                    .actionUrl(actionUrl)
+                    .isRead(false)
+                    .build();
+            notificationRepository.save(n);
+        }
+    }
+
+    @Override
+    public List<NotificationDTO> getMyNotifications() {
+        var user = resolveAuthenticatedUser();
+        var notifications = notificationRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
+        var notificationDtos = new java.util.ArrayList<NotificationDTO>();
+        for (Notification notification : notifications) {
+            notificationDtos.add(toDto(notification));
+        }
+        return notificationDtos;
+    }
+
+    @Override
+    public long getMyUnreadCount() {
+        var user = resolveAuthenticatedUser();
+        return notificationRepository.countByUser_IdAndIsReadFalse(user.getId());
     }
 
     @Override
@@ -49,6 +86,15 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void deleteNotification(UUID notificationId) {
         notificationRepository.deleteById(notificationId);
+    }
+
+    private User resolveAuthenticatedUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            throw new IllegalStateException("Authentication required");
+        }
+        return userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
     }
 
     private Notification toEntity(NotificationDTO notification) {

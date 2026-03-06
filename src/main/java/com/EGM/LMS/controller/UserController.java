@@ -1,11 +1,13 @@
 package com.EGM.LMS.controller;
 
 import com.EGM.LMS.dto.UserDTO;
+import com.EGM.LMS.service.AuditLogService;
 import com.EGM.LMS.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
     @PostMapping
     ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDto) {
@@ -31,13 +34,16 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    ResponseEntity<UserDTO> updateUser(@PathVariable UUID userId, @RequestBody UserDTO userDto) {
-        return ResponseEntity.ok(userService.updateUser(userId, userDto));
+    ResponseEntity<UserDTO> updateUser(@PathVariable UUID userId, @RequestBody UserDTO userDto, HttpServletRequest request) {
+        UserDTO updated = userService.updateUser(userId, userDto);
+        auditLogService.logAction("UPDATE_USER", "USER", userId.toString(), null, request.getRemoteAddr(), request.getHeader("User-Agent"));
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{userId}")
-    ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+    ResponseEntity<Void> deleteUser(@PathVariable UUID userId, HttpServletRequest request) {
         userService.deleteUser(userId);
+        auditLogService.logAction("DELETE_USER", "USER", userId.toString(), null, request.getRemoteAddr(), request.getHeader("User-Agent"));
         return ResponseEntity.noContent().build();
     }
 }

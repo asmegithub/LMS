@@ -13,6 +13,7 @@ import com.EGM.LMS.repository.EnrollmentRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CertificateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +31,18 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public CertificateDTO createCertificate(CertificateDTO certificate) {
         return toDto(certificateRepository.save(toEntity(certificate)));
+    }
+
+    @Override
+    public List<CertificateDTO> getMyCertificates() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            throw new IllegalStateException("Authentication required");
+        }
+        var currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        List<Certificate> certificates = certificateRepository.findByStudent_IdOrderByIssuedAtDesc(currentUser.getId());
+        return certificates.stream().map(this::toDto).toList();
     }
 
     @Override

@@ -11,8 +11,10 @@ import com.EGM.LMS.repository.LessonRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.BookmarkService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,7 +28,26 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Override
     public BookmarkDTO createBookmark(BookmarkDTO bookmark) {
-        return toDto(bookmarkRepository.save(toEntity(bookmark)));
+        var entity = toEntity(bookmark);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            userRepository.findByEmail(auth.getName()).ifPresent(entity::setUser);
+        }
+        return toDto(bookmarkRepository.save(entity));
+    }
+
+    @Override
+    public List<BookmarkDTO> getMyBookmarks(UUID lessonId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) return List.of();
+        var user = userRepository.findByEmail(auth.getName());
+        if (user.isEmpty()) return List.of();
+        var list = lessonId != null
+                ? bookmarkRepository.findByUser_IdAndLesson_IdOrderByTimestampAsc(user.get().getId(), lessonId)
+                : bookmarkRepository.findByUser_IdOrderByCreatedAtDesc(user.get().getId());
+        var dtos = new ArrayList<BookmarkDTO>();
+        for (Bookmark b : list) dtos.add(toDto(b));
+        return dtos;
     }
 
     @Override

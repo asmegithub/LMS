@@ -15,6 +15,11 @@ import java.util.UUID;
 public class BookmarkController {
     private final BookmarkService bookmarkService;
 
+    @GetMapping("/me")
+    ResponseEntity<List<BookmarkDTO>> getMyBookmarks(@RequestParam(required = false) UUID lessonId) {
+        return ResponseEntity.ok(bookmarkService.getMyBookmarks(lessonId));
+    }
+
     @PostMapping
     ResponseEntity<BookmarkDTO> createBookmark(@RequestBody BookmarkDTO bookmarkDto) {
         return ResponseEntity.ok(bookmarkService.createBookmark(bookmarkDto));

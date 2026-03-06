@@ -34,6 +34,16 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
+    public List<LessonDTO> getLessonsByCourseId(UUID courseId) {
+        var lessons = lessonRepository.findBySection_Course_IdOrderBySection_OrderIndexAscOrderIndexAsc(courseId);
+        var lessonDtos = new java.util.ArrayList<LessonDTO>();
+        for (Lesson lesson : lessons) {
+            lessonDtos.add(toDto(lesson));
+        }
+        return lessonDtos;
+    }
+
+    @Override
     public LessonDTO getLesson(UUID lessonId) {
         return toDto(lessonRepository.findById(lessonId).orElseThrow());
     }

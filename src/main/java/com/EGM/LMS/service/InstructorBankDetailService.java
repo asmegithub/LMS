@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface InstructorBankDetailService {
     InstructorBankDetailDTO createInstructorBankDetail(InstructorBankDetailDTO instructorBankDetail);
+    List<InstructorBankDetailDTO> getMyBankDetails();
     List<InstructorBankDetailDTO> getAllInstructorBankDetails();
     InstructorBankDetailDTO getInstructorBankDetail(UUID instructorBankDetailId);
     InstructorBankDetailDTO updateInstructorBankDetail(UUID instructorBankDetailId, InstructorBankDetailDTO instructorBankDetail);

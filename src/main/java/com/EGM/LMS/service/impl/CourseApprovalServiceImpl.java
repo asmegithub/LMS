@@ -8,6 +8,8 @@ import com.EGM.LMS.repository.CourseApprovalRepository;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CourseApprovalService;
+import com.EGM.LMS.service.EmailLogService;
+import com.EGM.LMS.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +22,23 @@ public class CourseApprovalServiceImpl implements CourseApprovalService {
     private final CourseApprovalRepository courseApprovalRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final EmailLogService emailLogService;
+    private final NotificationService notificationService;
 
     @Override
     public CourseApprovalDTO createCourseApproval(CourseApprovalDTO courseApproval) {
-        return toDto(courseApprovalRepository.save(toEntity(courseApproval)));
+        var entity = toEntity(courseApproval);
+        entity = courseApprovalRepository.save(entity);
+        var course = entity.getCourse();
+        notificationService.notifyAdmins(
+                "COURSE_PENDING_APPROVAL",
+                "Course pending approval",
+                "A course was submitted for review: " + (course != null && course.getTitle() != null ? course.getTitle() : entity.getId().toString()),
+                "CourseApproval",
+                entity.getId().toString(),
+                "/admin/courses"
+        );
+        return toDto(entity);
     }
 
     @Override
@@ -43,10 +58,28 @@ public class CourseApprovalServiceImpl implements CourseApprovalService {
 
     @Override
     public CourseApprovalDTO updateCourseApproval(UUID courseApprovalId, CourseApprovalDTO courseApproval) {
-        courseApprovalRepository.findById(courseApprovalId).orElseThrow();
+        var existing = courseApprovalRepository.findById(courseApprovalId).orElseThrow();
         var entity = toEntity(courseApproval);
         entity.setId(courseApprovalId);
-        return toDto(courseApprovalRepository.save(entity));
+        CourseApprovalDTO saved = toDto(courseApprovalRepository.save(entity));
+        String approvalStatus = courseApproval.getStatus();
+        if ("APPROVED".equalsIgnoreCase(approvalStatus) || "REJECTED".equalsIgnoreCase(approvalStatus)) {
+            var course = existing.getCourse();
+            if (course != null && course.getInstructor() != null && course.getInstructor().getUser() != null) {
+                var instructor = course.getInstructor().getUser();
+                String subject = "APPROVED".equalsIgnoreCase(approvalStatus)
+                        ? "Your course has been approved"
+                        : "Course review: " + (course.getTitle() != null ? course.getTitle() : "Update");
+                emailLogService.recordEmail(
+                        instructor.getId(),
+                        instructor.getEmail(),
+                        subject,
+                        "APPROVED".equalsIgnoreCase(approvalStatus) ? "APPROVAL" : "REJECTION",
+                        "SENT"
+                );
+            }
+        }
+        return saved;
     }
 
     @Override

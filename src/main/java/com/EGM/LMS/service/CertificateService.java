@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface CertificateService {
     CertificateDTO createCertificate(CertificateDTO certificate);
+    List<CertificateDTO> getMyCertificates();
     List<CertificateDTO> getAllCertificates();
     CertificateDTO getCertificate(UUID certificateId);
     CertificateDTO updateCertificate(UUID certificateId, CertificateDTO certificate);

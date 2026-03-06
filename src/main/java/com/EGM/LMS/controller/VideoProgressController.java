@@ -20,6 +20,25 @@ public class VideoProgressController {
         return ResponseEntity.ok(videoProgressService.createVideoProgress(videoProgressDto));
     }
 
+    @GetMapping("/by-enrollment-lesson")
+    ResponseEntity<VideoProgressDTO> getByEnrollmentAndLesson(
+            @RequestParam UUID enrollmentId,
+            @RequestParam UUID lessonId) {
+        return videoProgressService.getByEnrollmentAndLesson(enrollmentId, lessonId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.ok(videoProgressService.emptyProgressDto()));
+    }
+
+    @PostMapping("/upsert")
+    ResponseEntity<VideoProgressDTO> upsertProgress(@RequestBody java.util.Map<String, Object> body) {
+        UUID enrollmentId = UUID.fromString((String) body.get("enrollmentId"));
+        UUID lessonId = UUID.fromString((String) body.get("lessonId"));
+        Integer lastWatchedPosition = body.get("lastWatchedPosition") != null ? ((Number) body.get("lastWatchedPosition")).intValue() : null;
+        Integer watchedDuration = body.get("watchedDuration") != null ? ((Number) body.get("watchedDuration")).intValue() : null;
+        Integer totalDuration = body.get("totalDuration") != null ? ((Number) body.get("totalDuration")).intValue() : null;
+        return ResponseEntity.ok(videoProgressService.upsertProgress(enrollmentId, lessonId, lastWatchedPosition, watchedDuration, totalDuration));
+    }
+
     @GetMapping
     ResponseEntity<List<VideoProgressDTO>> getAllVideoProgresses() {
         return ResponseEntity.ok(videoProgressService.getAllVideoProgresses());

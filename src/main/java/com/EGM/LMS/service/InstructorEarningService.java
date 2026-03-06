@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface InstructorEarningService {
     InstructorEarningDTO createInstructorEarning(InstructorEarningDTO instructorEarning);
+    java.util.Optional<InstructorEarningDTO> getMyEarning();
     List<InstructorEarningDTO> getAllInstructorEarnings();
     InstructorEarningDTO getInstructorEarning(UUID instructorEarningId);
     InstructorEarningDTO updateInstructorEarning(UUID instructorEarningId, InstructorEarningDTO instructorEarning);

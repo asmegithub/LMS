@@ -135,16 +135,20 @@ public class AuthServiceImpl implements AuthService {
         }
 
         var user = userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(User.builder()
-                        .email(email)
-                        .firstName(firstName)
-                        .lastName(lastName)
-                        .profileImage(profileImage)
-                        .role(DEFAULT_ROLE)
-                        .language("en")
-                        .isActive(true)
-                        .isVerified(true)
-                        .build()));
+                .orElseGet(() -> {
+                    var newUser = User.builder()
+                            .email(email)
+                            .firstName(firstName != null ? firstName : "")
+                            .lastName(lastName != null ? lastName : "")
+                            .profileImage(profileImage)
+                            .role(DEFAULT_ROLE)
+                            .language("en")
+                            .isActive(true)
+                            .isVerified(true)
+                            .passwordHash(java.util.UUID.randomUUID().toString())
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
         if (profileImage != null && (user.getProfileImage() == null || user.getProfileImage().isBlank())) {
             user.setProfileImage(profileImage);

@@ -21,7 +21,10 @@ public class CourseSectionController {
     }
 
     @GetMapping
-    ResponseEntity<List<CourseSectionDTO>> getAllCourseSections() {
+    ResponseEntity<List<CourseSectionDTO>> getCourseSections(@RequestParam(required = false) UUID courseId) {
+        if (courseId != null) {
+            return ResponseEntity.ok(courseSectionService.getCourseSectionsByCourseId(courseId));
+        }
         return ResponseEntity.ok(courseSectionService.getAllCourseSections());
     }
 

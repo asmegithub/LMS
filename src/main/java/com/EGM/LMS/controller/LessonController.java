@@ -21,7 +21,10 @@ public class LessonController {
     }
 
     @GetMapping
-    ResponseEntity<List<LessonDTO>> getAllLessons() {
+    ResponseEntity<List<LessonDTO>> getLessons(@RequestParam(required = false) UUID courseId) {
+        if (courseId != null) {
+            return ResponseEntity.ok(lessonService.getLessonsByCourseId(courseId));
+        }
         return ResponseEntity.ok(lessonService.getAllLessons());
     }
 

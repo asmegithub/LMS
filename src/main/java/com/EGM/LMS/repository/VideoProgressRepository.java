@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface VideoProgressRepository extends JpaRepository<VideoProgress, UUID> {
+    java.util.Optional<VideoProgress> findByEnrollment_IdAndLesson_Id(UUID enrollmentId, UUID lessonId);
 }

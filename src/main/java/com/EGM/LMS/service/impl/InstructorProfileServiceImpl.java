@@ -6,6 +6,7 @@ import com.EGM.LMS.model.InstructorProfile;
 import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.InstructorProfileService;
+import com.EGM.LMS.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +23,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class InstructorProfileServiceImpl implements InstructorProfileService {
     private final InstructorProfileRepository instructorProfileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     public InstructorProfileDTO applyInstructorProfile(InstructorProfileDTO instructorProfile, String userEmail) {
@@ -55,7 +57,16 @@ public class InstructorProfileServiceImpl implements InstructorProfileService {
         profile.setVerified(false);
         profile.setVerifiedAt(null);
 
-        return toDto(instructorProfileRepository.save(profile));
+        profile = instructorProfileRepository.save(profile);
+        notificationService.notifyAdmins(
+                "INSTRUCTOR_APPLICATION",
+                "Instructor application",
+                "A user applied for instructor: " + (user.getFirstName() != null ? user.getFirstName() : "") + " " + (user.getLastName() != null ? user.getLastName() : "") + " (" + user.getEmail() + ")",
+                "InstructorProfile",
+                profile.getId().toString(),
+                "/admin/instructors"
+        );
+        return toDto(profile);
     }
 
     @Override

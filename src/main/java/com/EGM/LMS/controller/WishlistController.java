@@ -25,6 +25,27 @@ public class WishlistController {
         return ResponseEntity.ok(wishlistService.getAllWishlists());
     }
 
+    @GetMapping("/me")
+    ResponseEntity<List<WishlistDTO>> getMyWishlists() {
+        return ResponseEntity.ok(wishlistService.getMyWishlists());
+    }
+
+    @PostMapping("/add")
+    ResponseEntity<WishlistDTO> addCourse(@RequestParam UUID courseId) {
+        return ResponseEntity.ok(wishlistService.addToWishlist(courseId));
+    }
+
+    @DeleteMapping("/remove")
+    ResponseEntity<Void> removeCourse(@RequestParam UUID courseId) {
+        wishlistService.removeFromWishlist(courseId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/check")
+    ResponseEntity<Boolean> checkInWishlist(@RequestParam UUID courseId) {
+        return ResponseEntity.ok(wishlistService.isInWishlist(courseId));
+    }
+
     @GetMapping("/{wishlistId}")
     ResponseEntity<WishlistDTO> getWishlist(@PathVariable UUID wishlistId) {
         return ResponseEntity.ok(wishlistService.getWishlist(wishlistId));

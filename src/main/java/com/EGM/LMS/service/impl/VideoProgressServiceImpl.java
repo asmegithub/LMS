@@ -13,7 +13,10 @@ import com.EGM.LMS.service.VideoProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,6 +30,52 @@ public class VideoProgressServiceImpl implements VideoProgressService {
     @Override
     public VideoProgressDTO createVideoProgress(VideoProgressDTO videoProgress) {
         return toDto(videoProgressRepository.save(toEntity(videoProgress)));
+    }
+
+    @Override
+    public Optional<VideoProgressDTO> getByEnrollmentAndLesson(UUID enrollmentId, UUID lessonId) {
+        return videoProgressRepository.findByEnrollment_IdAndLesson_Id(enrollmentId, lessonId).map(this::toDto);
+    }
+
+    @Override
+    public VideoProgressDTO emptyProgressDto() {
+        return VideoProgressDTO.builder()
+                .lastWatchedPosition(0)
+                .watchedDuration(0)
+                .totalDuration(0)
+                .build();
+    }
+
+    @Override
+    public VideoProgressDTO upsertProgress(UUID enrollmentId, UUID lessonId, Integer lastWatchedPosition, Integer watchedDuration, Integer totalDuration) {
+        return doUpsert(enrollmentId, lessonId, lastWatchedPosition, watchedDuration, totalDuration);
+    }
+
+    private VideoProgressDTO doUpsert(UUID enrollmentId, UUID lessonId, Integer lastWatchedPosition, Integer watchedDuration, Integer totalDuration) {
+        var enrollment = enrollmentRepository.findById(enrollmentId).orElseThrow();
+        var lesson = lessonRepository.findById(lessonId).orElseThrow();
+        var student = enrollment.getStudent();
+        var existing = videoProgressRepository.findByEnrollment_IdAndLesson_Id(enrollmentId, lessonId);
+        VideoProgress entity;
+        if (existing.isPresent()) {
+            entity = existing.get();
+            entity.setLastWatchedPosition(lastWatchedPosition != null ? lastWatchedPosition : entity.getLastWatchedPosition());
+            entity.setWatchedDuration(watchedDuration != null ? watchedDuration : entity.getWatchedDuration());
+            entity.setTotalDuration(totalDuration != null ? totalDuration : entity.getTotalDuration());
+        } else {
+            entity = VideoProgress.builder()
+                    .enrollment(enrollment)
+                    .lesson(lesson)
+                    .student(student)
+                    .lastWatchedPosition(lastWatchedPosition != null ? lastWatchedPosition : 0)
+                    .watchedDuration(watchedDuration != null ? watchedDuration : 0)
+                    .totalDuration(totalDuration != null ? totalDuration : 0)
+                    .build();
+        }
+        if (entity.getTotalDuration() != null && entity.getTotalDuration() > 0 && entity.getWatchedDuration() != null) {
+            entity.setWatchPercentage(BigDecimal.valueOf(100.0 * entity.getWatchedDuration() / entity.getTotalDuration()).setScale(2, RoundingMode.HALF_UP));
+        }
+        return toDto(videoProgressRepository.save(entity));
     }
 
     @Override

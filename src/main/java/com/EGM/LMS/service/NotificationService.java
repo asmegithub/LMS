@@ -7,6 +7,10 @@ import java.util.UUID;
 
 public interface NotificationService {
     NotificationDTO createNotification(NotificationDTO notification);
+    /** Create a notification for all admin users (for admin supervision events). */
+    void notifyAdmins(String type, String title, String message, String relatedType, String relatedId, String actionUrl);
+    List<NotificationDTO> getMyNotifications();
+    long getMyUnreadCount();
     List<NotificationDTO> getAllNotifications();
     NotificationDTO getNotification(UUID notificationId);
     NotificationDTO updateNotification(UUID notificationId, NotificationDTO notification);

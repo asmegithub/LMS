@@ -24,6 +24,19 @@ public class EmailLogServiceImpl implements EmailLogService {
     }
 
     @Override
+    public void recordEmail(UUID recipientId, String emailAddress, String subject, String type, String status) {
+        var recipient = recipientId != null ? userRepository.findById(recipientId).orElse(null) : null;
+        var log = EmailLog.builder()
+                .recipient(recipient)
+                .email(emailAddress != null ? emailAddress : (recipient != null ? recipient.getEmail() : null))
+                .subject(subject)
+                .type(type)
+                .status(status != null ? status : "PENDING")
+                .build();
+        emailLogRepository.save(log);
+    }
+
+    @Override
     public List<EmailLogDTO> getAllEmailLogs() {
         var emailLogs = emailLogRepository.findAll();
         var emailLogDtos = new java.util.ArrayList<EmailLogDTO>();

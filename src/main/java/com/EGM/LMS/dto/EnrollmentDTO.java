@@ -27,4 +27,9 @@ public class EnrollmentDTO {
     private LocalDateTime enrolledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /** When set, the enrolling user came from this referrer's share link; referrer gets 5% credit. */
+    private UUID referrerId;
+    /** When true, pay for enrollment using referral balance if sufficient. */
+    private Boolean useBalance;
 }

@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public interface LessonProgressService {
     LessonProgressDTO createLessonProgress(LessonProgressDTO lessonProgress);
+    List<LessonProgressDTO> getByEnrollmentId(UUID enrollmentId);
+    LessonProgressDTO recordProgress(UUID enrollmentId, UUID lessonId, String status);
     List<LessonProgressDTO> getAllLessonProgresses();
     LessonProgressDTO getLessonProgress(UUID lessonProgressId);
     LessonProgressDTO updateLessonProgress(UUID lessonProgressId, LessonProgressDTO lessonProgress);

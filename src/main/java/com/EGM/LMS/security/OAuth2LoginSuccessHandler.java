@@ -32,6 +32,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         var email = getStringAttribute(oauthUser, "email");
+        if (email == null || email.isBlank()) {
+            email = getStringAttribute(oauthUser, "sub");
+        }
         var firstName = getStringAttribute(oauthUser, "given_name");
         var lastName = getStringAttribute(oauthUser, "family_name");
         var picture = getStringAttribute(oauthUser, "picture");

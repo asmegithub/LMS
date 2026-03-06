@@ -34,6 +34,16 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     }
 
     @Override
+    public List<CourseSectionDTO> getCourseSectionsByCourseId(UUID courseId) {
+        var sections = courseSectionRepository.findByCourse_IdOrderByOrderIndexAsc(courseId);
+        var sectionDtos = new java.util.ArrayList<CourseSectionDTO>();
+        for (CourseSection section : sections) {
+            sectionDtos.add(toDto(section));
+        }
+        return sectionDtos;
+    }
+
+    @Override
     public CourseSectionDTO getCourseSection(UUID courseSectionId) {
         return toDto(courseSectionRepository.findById(courseSectionId).orElseThrow());
     }

@@ -15,29 +15,13 @@ import java.util.UUID;
 public class CertificateController {
     private final CertificateService certificateService;
 
-    @PostMapping
-    ResponseEntity<CertificateDTO> createCertificate(@RequestBody CertificateDTO certificateDto) {
-        return ResponseEntity.ok(certificateService.createCertificate(certificateDto));
-    }
-
     @GetMapping
-    ResponseEntity<List<CertificateDTO>> getAllCertificates() {
-        return ResponseEntity.ok(certificateService.getAllCertificates());
+    ResponseEntity<List<CertificateDTO>> getMyCertificates() {
+        return ResponseEntity.ok(certificateService.getMyCertificates());
     }
 
     @GetMapping("/{certificateId}")
     ResponseEntity<CertificateDTO> getCertificate(@PathVariable UUID certificateId) {
         return ResponseEntity.ok(certificateService.getCertificate(certificateId));
-    }
-
-    @PutMapping("/{certificateId}")
-    ResponseEntity<CertificateDTO> updateCertificate(@PathVariable UUID certificateId, @RequestBody CertificateDTO certificateDto) {
-        return ResponseEntity.ok(certificateService.updateCertificate(certificateId, certificateDto));
-    }
-
-    @DeleteMapping("/{certificateId}")
-    ResponseEntity<Void> deleteCertificate(@PathVariable UUID certificateId) {
-        certificateService.deleteCertificate(certificateId);
-        return ResponseEntity.noContent().build();
     }
 }

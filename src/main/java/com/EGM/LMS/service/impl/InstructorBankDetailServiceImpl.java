@@ -5,10 +5,13 @@ import com.EGM.LMS.dto.InstructorProfileDTO;
 import com.EGM.LMS.model.InstructorBankDetail;
 import com.EGM.LMS.repository.InstructorBankDetailRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
+import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.InstructorBankDetailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +20,21 @@ import java.util.UUID;
 public class InstructorBankDetailServiceImpl implements InstructorBankDetailService {
     private final InstructorBankDetailRepository instructorBankDetailRepository;
     private final InstructorProfileRepository instructorProfileRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    public List<InstructorBankDetailDTO> getMyBankDetails() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) return List.of();
+        var user = userRepository.findByEmail(auth.getName());
+        if (user.isEmpty()) return List.of();
+        var profile = instructorProfileRepository.findFirstByUser_Id(user.get().getId());
+        if (profile.isEmpty()) return List.of();
+        var list = instructorBankDetailRepository.findByInstructorProfile_IdOrderByIsPrimaryDesc(profile.get().getId());
+        var dtos = new ArrayList<InstructorBankDetailDTO>();
+        for (InstructorBankDetail b : list) dtos.add(toDto(b));
+        return dtos;
+    }
 
     @Override
     public InstructorBankDetailDTO createInstructorBankDetail(InstructorBankDetailDTO instructorBankDetail) {

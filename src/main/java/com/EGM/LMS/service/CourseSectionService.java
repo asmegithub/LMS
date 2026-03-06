@@ -8,6 +8,7 @@ import java.util.UUID;
 public interface CourseSectionService {
     CourseSectionDTO createCourseSection(CourseSectionDTO courseSection);
     List<CourseSectionDTO> getAllCourseSections();
+    List<CourseSectionDTO> getCourseSectionsByCourseId(UUID courseId);
     CourseSectionDTO getCourseSection(UUID courseSectionId);
     CourseSectionDTO updateCourseSection(UUID courseSectionId, CourseSectionDTO courseSection);
     void deleteCourseSection(UUID courseSectionId);

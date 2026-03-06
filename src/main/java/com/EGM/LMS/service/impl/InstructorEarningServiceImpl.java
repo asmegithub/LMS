@@ -7,9 +7,11 @@ import com.EGM.LMS.repository.InstructorEarningRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.service.InstructorEarningService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,6 +19,15 @@ import java.util.UUID;
 public class InstructorEarningServiceImpl implements InstructorEarningService {
     private final InstructorEarningRepository instructorEarningRepository;
     private final InstructorProfileRepository instructorProfileRepository;
+
+    @Override
+    public Optional<InstructorEarningDTO> getMyEarning() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) return Optional.empty();
+        var profile = instructorProfileRepository.findFirstByUser_Email(auth.getName());
+        if (profile.isEmpty()) return Optional.empty();
+        return instructorEarningRepository.findFirstByInstructorProfile_Id(profile.get().getId()).map(this::toDto);
+    }
 
     @Override
     public InstructorEarningDTO createInstructorEarning(InstructorEarningDTO instructorEarning) {

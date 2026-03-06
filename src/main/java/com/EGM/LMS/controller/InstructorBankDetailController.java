@@ -20,6 +20,11 @@ public class InstructorBankDetailController {
         return ResponseEntity.ok(instructorBankDetailService.createInstructorBankDetail(instructorBankDetailDto));
     }
 
+    @GetMapping("/me")
+    ResponseEntity<List<InstructorBankDetailDTO>> getMyBankDetails() {
+        return ResponseEntity.ok(instructorBankDetailService.getMyBankDetails());
+    }
+
     @GetMapping
     ResponseEntity<List<InstructorBankDetailDTO>> getAllInstructorBankDetails() {
         return ResponseEntity.ok(instructorBankDetailService.getAllInstructorBankDetails());

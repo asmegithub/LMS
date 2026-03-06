@@ -25,6 +25,16 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getAllNotifications());
     }
 
+    @GetMapping("/me")
+    ResponseEntity<List<NotificationDTO>> getMyNotifications() {
+        return ResponseEntity.ok(notificationService.getMyNotifications());
+    }
+
+    @GetMapping("/me/unread-count")
+    ResponseEntity<Long> getUnreadCount() {
+        return ResponseEntity.ok(notificationService.getMyUnreadCount());
+    }
+
     @GetMapping("/{notificationId}")
     ResponseEntity<NotificationDTO> getNotification(@PathVariable UUID notificationId) {
         return ResponseEntity.ok(notificationService.getNotification(notificationId));

@@ -1,3 +1,7 @@
+server:
+  # Use 8080 (default); 808 can cause BindException: Permission denied on some systems
+  port: ${SERVER_PORT:8080}
+
 spring:
   application:
     name: LMS
@@ -30,9 +34,18 @@ app:
     secret: ${JWT_SECRET:ae22d8bb7896df828b652829e9db5655d49555b6dcf473d581f866dc4f94909d}
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 30
+  # Frontend URL where user lands after OAuth (with ?accessToken=...&refreshToken=...)
+  # Frontend on 8081 → use http://localhost:8081/auth
   oauth2:
     redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:8081/auth}
   cors:
+    # Must include frontend origin so browser allows the redirect (frontend on 8081)
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:uploads}
+  chapa:
+    secret-key: ${CHAPA_SECRET_KEY:}
+    # Frontend base URL for return/cancel (e.g. http://localhost:8081)
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8081}
+    # Backend base URL for Chapa callback (e.g. http://localhost:8080)
+    callback-base-url: ${CHAPA_CALLBACK_BASE_URL:http://localhost:8080}

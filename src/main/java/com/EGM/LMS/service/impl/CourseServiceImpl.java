@@ -10,6 +10,7 @@ import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CourseService;
+import com.EGM.LMS.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,13 +24,23 @@ public class CourseServiceImpl implements CourseService {
     private final CourseCategoryRepository courseCategoryRepository;
     private final InstructorProfileRepository instructorProfileRepository;
     private final UserRepository userRepository;
-    private  final CourseRepository courseRepository;
-    // 
+    private final CourseRepository courseRepository;
     private final CourseCategoryServiceImpl courseCategoryServiceImpl;
+    private final NotificationService notificationService;
 
     @Override
     public CourseDTO createCourse(CourseDTO coursedto) {
-        return toDto(courseRepository.save(toEntity(coursedto)));
+        var course = courseRepository.save(toEntity(coursedto));
+        var dto = toDto(course);
+        notificationService.notifyAdmins(
+                "COURSE_CREATED",
+                "New course created",
+                "An instructor created a course: " + (course.getTitle() != null ? course.getTitle() : course.getId().toString()),
+                "Course",
+                course.getId().toString(),
+                "/admin/courses"
+        );
+        return dto;
     }
 
     @Override

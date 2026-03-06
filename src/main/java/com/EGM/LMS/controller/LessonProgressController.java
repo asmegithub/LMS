@@ -1,6 +1,7 @@
 package com.EGM.LMS.controller;
 
 import com.EGM.LMS.dto.LessonProgressDTO;
+import com.EGM.LMS.dto.RecordProgressRequest;
 import com.EGM.LMS.service.LessonProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,17 @@ public class LessonProgressController {
     }
 
     @GetMapping
-    ResponseEntity<List<LessonProgressDTO>> getAllLessonProgresses() {
+    ResponseEntity<List<LessonProgressDTO>> getLessonProgresses(@RequestParam(required = false) UUID enrollmentId) {
+        if (enrollmentId != null) {
+            return ResponseEntity.ok(lessonProgressService.getByEnrollmentId(enrollmentId));
+        }
         return ResponseEntity.ok(lessonProgressService.getAllLessonProgresses());
+    }
+
+    @PostMapping("/record")
+    ResponseEntity<LessonProgressDTO> recordProgress(@RequestBody RecordProgressRequest request) {
+        return ResponseEntity.ok(lessonProgressService.recordProgress(
+                request.getEnrollmentId(), request.getLessonId(), request.getStatus()));
     }
 
     @GetMapping("/{lessonProgressId}")

@@ -3,12 +3,14 @@ package com.EGM.LMS.service.impl;
 import com.EGM.LMS.dto.CourseDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.dto.WishlistDTO;
+import com.EGM.LMS.model.User;
 import com.EGM.LMS.model.Wishlist;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.repository.WishlistRepository;
 import com.EGM.LMS.service.WishlistService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +26,45 @@ public class WishlistServiceImpl implements WishlistService {
     @Override
     public WishlistDTO createWishlist(WishlistDTO wishlist) {
         return toDto(wishlistRepository.save(toEntity(wishlist)));
+    }
+
+    @Override
+    public List<WishlistDTO> getMyWishlists() {
+        var user = resolveAuthenticatedUser();
+        var list = wishlistRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
+        var dtos = new java.util.ArrayList<WishlistDTO>();
+        for (Wishlist w : list) {
+            dtos.add(toDto(w));
+        }
+        return dtos;
+    }
+
+    @Override
+    public WishlistDTO addToWishlist(UUID courseId) {
+        var user = resolveAuthenticatedUser();
+        var existing = wishlistRepository.findByUser_IdAndCourse_Id(user.getId(), courseId);
+        if (existing.isPresent()) {
+            return toDto(existing.get());
+        }
+        var course = courseRepository.findById(courseId).orElseThrow();
+        var w = wishlistRepository.save(Wishlist.builder()
+                .user(user)
+                .course(course)
+                .build());
+        return toDto(w);
+    }
+
+    @Override
+    public void removeFromWishlist(UUID courseId) {
+        var user = resolveAuthenticatedUser();
+        wishlistRepository.findByUser_IdAndCourse_Id(user.getId(), courseId)
+                .ifPresent(wishlistRepository::delete);
+    }
+
+    @Override
+    public boolean isInWishlist(UUID courseId) {
+        var user = resolveAuthenticatedUser();
+        return wishlistRepository.findByUser_IdAndCourse_Id(user.getId(), courseId).isPresent();
     }
 
     @Override
@@ -52,6 +93,15 @@ public class WishlistServiceImpl implements WishlistService {
     @Override
     public void deleteWishlist(UUID wishlistId) {
         wishlistRepository.deleteById(wishlistId);
+    }
+
+    private User resolveAuthenticatedUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            throw new IllegalStateException("Authentication required");
+        }
+        return userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
     }
 
     private Wishlist toEntity(WishlistDTO wishlist) {

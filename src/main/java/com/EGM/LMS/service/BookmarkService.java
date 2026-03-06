@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface BookmarkService {
     BookmarkDTO createBookmark(BookmarkDTO bookmark);
+    List<BookmarkDTO> getMyBookmarks(java.util.UUID lessonId);
     List<BookmarkDTO> getAllBookmarks();
     BookmarkDTO getBookmark(UUID bookmarkId);
     BookmarkDTO updateBookmark(UUID bookmarkId, BookmarkDTO bookmark);
