@@ -2,6 +2,7 @@ package com.EGM.LMS.service.impl;
 
 import com.EGM.LMS.dto.CourseDTO;
 import com.EGM.LMS.dto.InstructorProfileDTO;
+import com.EGM.LMS.dto.NotificationDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Course;
 import com.EGM.LMS.model.InstructorProfile;
@@ -10,6 +11,8 @@ import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CourseService;
+import com.EGM.LMS.service.NotificationService;
+import com.EGM.LMS.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,10 +29,14 @@ public class CourseServiceImpl implements CourseService {
     private  final CourseRepository courseRepository;
     // 
     private final CourseCategoryServiceImpl courseCategoryServiceImpl;
+    private final NotificationService notificationService;
+    private final WebPushService webPushService;
 
     @Override
     public CourseDTO createCourse(CourseDTO coursedto) {
-        return toDto(courseRepository.save(toEntity(coursedto)));
+        var savedCourse = courseRepository.save(toEntity(coursedto));
+        notifyAdminsCourseCreated(savedCourse);
+        return toDto(savedCourse);
     }
 
     @Override
@@ -225,6 +232,44 @@ public class CourseServiceImpl implements CourseService {
                         .build()));
     }
 
+    private void notifyAdminsCourseCreated(Course course) {
+        var admins = userRepository.findByRoleIgnoreCase("ADMIN");
+        if (admins.isEmpty()) {
+            admins = userRepository.findByRoleIgnoreCase("ROLE_ADMIN");
+        }
+        if (admins.isEmpty()) {
+            return;
+        }
+
+        var instructorName = "an instructor";
+        if (course.getInstructor() != null && course.getInstructor().getUser() != null) {
+            var firstName = Optional.ofNullable(course.getInstructor().getUser().getFirstName()).orElse("");
+            var lastName = Optional.ofNullable(course.getInstructor().getUser().getLastName()).orElse("");
+            var fullName = (firstName + " " + lastName).trim();
+            if (!fullName.isBlank()) {
+                instructorName = fullName;
+            }
+        }
+
+        var title = "New course submitted";
+        var message = instructorName + " submitted \"" + course.getTitle() + "\" for review.";
+        var actionUrl = "/admin/approvals";
+
+        for (var admin : admins) {
+            var notification = NotificationDTO.builder()
+                    .user(UserDTO.builder().id(admin.getId()).build())
+                    .type("SYSTEM")
+                    .title(title)
+                    .message(message)
+                    .isRead(false)
+                    .relatedId(course.getId() != null ? course.getId().toString() : null)
+                    .relatedType("COURSE")
+                    .actionUrl(actionUrl)
+                    .build();
+            notificationService.createNotification(notification);
+        }
+        webPushService.sendPushToUsers(admins, title, message, actionUrl);
+    }
 
 
 }

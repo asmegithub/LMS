@@ -36,3 +36,7 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:uploads}
+  push:
+    vapid-public-key: ${VAPID_PUBLIC_KEY:BJncOefWZdkZUf4jp8yMnyL3ThQPFGLINQg88wrjy7jaX_uFIekHMuIzNdJsDUWvUVUavaZAdGc0gbo0geExVNU}
+    vapid-private-key: ${VAPID_PRIVATE_KEY:jzuTceKJ1Q3FfEhTzLwKYaD9sKLHYE5Gkty6iWxeVOM}
+    vapid-subject: ${VAPID_SUBJECT:mailto:asmareaau@gmail.com}
