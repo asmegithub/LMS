@@ -49,3 +49,7 @@ app:
     frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8081}
     # Backend base URL for Chapa callback (e.g. http://localhost:8080)
     callback-base-url: ${CHAPA_CALLBACK_BASE_URL:http://localhost:8080}
+  push:
+    vapid-public-key: ${VAPID_PUBLIC_KEY:BJncOefWZdkZUf4jp8yMnyL3ThQPFGLINQg88wrjy7jaX_uFIekHMuIzNdJsDUWvUVUavaZAdGc0gbo0geExVNU}
+    vapid-private-key: ${VAPID_PRIVATE_KEY:jzuTceKJ1Q3FfEhTzLwKYaD9sKLHYE5Gkty6iWxeVOM}
+    vapid-subject: ${VAPID_SUBJECT:mailto:asmareaau@gmail.com}

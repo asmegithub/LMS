@@ -2,6 +2,7 @@ package com.EGM.LMS.service.impl;
 
 import com.EGM.LMS.dto.CourseDTO;
 import com.EGM.LMS.dto.InstructorProfileDTO;
+import com.EGM.LMS.dto.NotificationDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Course;
 import com.EGM.LMS.model.InstructorProfile;
@@ -11,6 +12,7 @@ import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.CourseService;
 import com.EGM.LMS.service.NotificationService;
+import com.EGM.LMS.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,26 +30,20 @@ public class CourseServiceImpl implements CourseService {
     private final CourseCategoryServiceImpl courseCategoryServiceImpl;
     private final NotificationService notificationService;
 
+    private final WebPushService webPushService;
+
     @Override
     public CourseDTO createCourse(CourseDTO coursedto) {
-        var course = courseRepository.save(toEntity(coursedto));
-        var dto = toDto(course);
-        notificationService.notifyAdmins(
-                "COURSE_CREATED",
-                "New course created",
-                "An instructor created a course: " + (course.getTitle() != null ? course.getTitle() : course.getId().toString()),
-                "Course",
-                course.getId().toString(),
-                "/admin/courses"
-        );
-        return dto;
+        var savedCourse = courseRepository.save(toEntity(coursedto));
+        notifyAdminsCourseCreated(savedCourse);
+        return toDto(savedCourse);
     }
 
     @Override
     public List<CourseDTO> getAllCourses() {
-        var courses=courseRepository.findAll();
-        var coursesDtos= new ArrayList<CourseDTO>();
-        for (Course c:courses){
+        var courses = courseRepository.findAll();
+        var coursesDtos = new ArrayList<CourseDTO>();
+        for (Course c : courses) {
             coursesDtos.add(toDto(c));
         }
         return coursesDtos;
@@ -70,14 +66,14 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseDTO getCourse(UUID courseId) {
-        var course=courseRepository.findById(courseId).orElseThrow();
-        return  toDto(course);
+        var course = courseRepository.findById(courseId).orElseThrow();
+        return toDto(course);
 
     }
 
     @Override
-    public CourseDTO updateCourse(UUID courseId,CourseDTO coursedto) {
-        var existingCourse=courseRepository.findById(courseId).orElseThrow();
+    public CourseDTO updateCourse(UUID courseId, CourseDTO coursedto) {
+        var existingCourse = courseRepository.findById(courseId).orElseThrow();
         existingCourse.setDescription(coursedto.getDescription());
         existingCourse.setDescriptionAm(coursedto.getDescriptionAm());
         existingCourse.setDescriptionGz(coursedto.getDescriptionGz());
@@ -111,8 +107,8 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.deleteById(courseId);
     }
 
-//    mapper methods
-    Course toEntity(CourseDTO coursedto){
+    // mapper methods
+    Course toEntity(CourseDTO coursedto) {
         return Course.builder()
                 .category(courseCategoryRepository.findById(coursedto.getCategoryId()).orElse(null))
                 .instructor(resolveInstructor(coursedto))
@@ -141,33 +137,33 @@ public class CourseServiceImpl implements CourseService {
                 .build();
     }
 
-    CourseDTO toDto(Course course){
+    CourseDTO toDto(Course course) {
         // instructor
         var instructor = course.getInstructor();
         return CourseDTO.builder()
                 .id(course.getId())
-            .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
+                .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .category(
-                        course.getCategory() != null ?
-                                courseCategoryServiceImpl.toDto(courseCategoryRepository.findById(course.getCategory().getId()).orElseThrow())
-                                : null
-                )
-            .instructor(InstructorProfileDTO.builder()
-                    .id(instructor != null ? instructor.getId() : null)
-                    .user(instructor != null ? UserDTO.builder()
-                            .id(instructor.getUser() != null ? instructor.getUser().getId() : null)
-                            .email(instructor.getUser() != null ? instructor.getUser().getEmail() : null)
-                            .firstName(instructor.getUser() != null ? instructor.getUser().getFirstName() : null)
-                            .lastName(instructor.getUser() != null ? instructor.getUser().getLastName() : null)
+                        course.getCategory() != null
+                                ? courseCategoryServiceImpl.toDto(
+                                        courseCategoryRepository.findById(course.getCategory().getId()).orElseThrow())
+                                : null)
+                .instructor(InstructorProfileDTO.builder()
+                        .id(instructor != null ? instructor.getId() : null)
+                        .user(instructor != null ? UserDTO.builder()
+                                .id(instructor.getUser() != null ? instructor.getUser().getId() : null)
+                                .email(instructor.getUser() != null ? instructor.getUser().getEmail() : null)
+                                .firstName(instructor.getUser() != null ? instructor.getUser().getFirstName() : null)
+                                .lastName(instructor.getUser() != null ? instructor.getUser().getLastName() : null)
 
-                            .build() : null)
-                    .headline(instructor != null ? instructor.getHeadline() : null)
-                    .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
-                    .isVerified(instructor != null && instructor.isVerified())
-                    .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
-                    .totalCourses(instructor!=null?instructor.getTotalCourses():0)
-                    .totalStudents(instructor!=null?instructor.getTotalStudents():0)
-                    .build())
+                                .build() : null)
+                        .headline(instructor != null ? instructor.getHeadline() : null)
+                        .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
+                        .isVerified(instructor != null && instructor.isVerified())
+                        .averageRating(instructor != null ? instructor.getAverageRating() : BigDecimal.ZERO)
+                        .totalCourses(instructor != null ? instructor.getTotalCourses() : 0)
+                        .totalStudents(instructor != null ? instructor.getTotalStudents() : 0)
+                        .build())
                 .title(course.getTitle())
                 .titleAm(course.getTitleAm())
                 .titleGz(course.getTitleGz())
@@ -236,6 +232,43 @@ public class CourseServiceImpl implements CourseService {
                         .build()));
     }
 
+    private void notifyAdminsCourseCreated(Course course) {
+        var admins = userRepository.findByRoleIgnoreCase("ADMIN");
+        if (admins.isEmpty()) {
+            admins = userRepository.findByRoleIgnoreCase("ROLE_ADMIN");
+        }
+        if (admins.isEmpty()) {
+            return;
+        }
 
+        var instructorName = "an instructor";
+        if (course.getInstructor() != null && course.getInstructor().getUser() != null) {
+            var firstName = Optional.ofNullable(course.getInstructor().getUser().getFirstName()).orElse("");
+            var lastName = Optional.ofNullable(course.getInstructor().getUser().getLastName()).orElse("");
+            var fullName = (firstName + " " + lastName).trim();
+            if (!fullName.isBlank()) {
+                instructorName = fullName;
+            }
+        }
+
+        var title = "New course submitted";
+        var message = instructorName + " submitted \"" + course.getTitle() + "\" for review.";
+        var actionUrl = "/admin/approvals";
+
+        for (var admin : admins) {
+            var notification = NotificationDTO.builder()
+                    .user(UserDTO.builder().id(admin.getId()).build())
+                    .type("SYSTEM")
+                    .title(title)
+                    .message(message)
+                    .isRead(false)
+                    .relatedId(course.getId() != null ? course.getId().toString() : null)
+                    .relatedType("COURSE")
+                    .actionUrl(actionUrl)
+                    .build();
+            notificationService.createNotification(notification);
+        }
+        webPushService.sendPushToUsers(admins, title, message, actionUrl);
+    }
 
 }
