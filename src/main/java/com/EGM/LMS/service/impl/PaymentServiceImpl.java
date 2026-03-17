@@ -5,12 +5,17 @@ import com.EGM.LMS.dto.ChapaInitializeRequest;
 import com.EGM.LMS.dto.ChapaInitializeResponse;
 import com.EGM.LMS.dto.CourseDTO;
 import com.EGM.LMS.dto.CouponDTO;
+import com.EGM.LMS.dto.OrderDTO;
 import com.EGM.LMS.dto.PaymentDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Course;
+import com.EGM.LMS.model.Order;
+import com.EGM.LMS.model.OrderItem;
 import com.EGM.LMS.model.Payment;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.CouponRepository;
+import com.EGM.LMS.repository.OrderItemRepository;
+import com.EGM.LMS.repository.OrderRepository;
 import com.EGM.LMS.repository.PaymentRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.model.User;
@@ -34,6 +39,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CouponRepository couponRepository;
     private final ChapaConfig chapaConfig;
     private final ChapaService chapaService;
@@ -102,10 +109,24 @@ public class PaymentServiceImpl implements PaymentService {
         if (!"STUDENT".equalsIgnoreCase(student.getRole())) {
             throw new IllegalStateException("Only students can initiate Chapa payment");
         }
-        if (request.getCourseId() == null) {
-            throw new IllegalArgumentException("courseId is required");
+
+        List<UUID> courseIds = request.getCourseIds() != null && !request.getCourseIds().isEmpty()
+                ? request.getCourseIds() : null;
+        if (courseIds == null && request.getCourseId() != null) {
+            courseIds = List.of(request.getCourseId());
         }
-        Course course = courseRepository.findById(request.getCourseId()).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        if (courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("courseId or courseIds is required");
+        }
+
+        if (courseIds.size() == 1) {
+            return initializeChapaPaymentSingle(student, courseIds.get(0), request);
+        }
+        return initializeChapaPaymentMulti(student, courseIds, request);
+    }
+
+    private ChapaInitializeResponse initializeChapaPaymentSingle(User student, UUID courseId, ChapaInitializeRequest request) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
         BigDecimal amount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
                 ? course.getDiscountPrice() : course.getPrice();
         if (amount == null) amount = BigDecimal.ZERO;
@@ -130,6 +151,71 @@ public class PaymentServiceImpl implements PaymentService {
 
         String checkoutUrl = chapaService.initializeTransaction(
                 amount,
+                currency,
+                student.getEmail(),
+                student.getFirstName(),
+                student.getLastName(),
+                txRef,
+                callbackUrl,
+                returnUrl
+        );
+
+        return ChapaInitializeResponse.builder()
+                .checkoutUrl(checkoutUrl)
+                .paymentId(payment.getId())
+                .txRef(txRef)
+                .build();
+    }
+
+    private ChapaInitializeResponse initializeChapaPaymentMulti(User student, List<UUID> courseIds, ChapaInitializeRequest request) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        String currency = "ETB";
+        Order order = Order.builder()
+                .student(student)
+                .gateway("CHAPA")
+                .status("PENDING")
+                .build();
+        order = orderRepository.save(order);
+
+        for (UUID courseId : courseIds) {
+            Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
+            BigDecimal lineAmount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                    ? course.getDiscountPrice() : course.getPrice();
+            if (lineAmount == null) lineAmount = BigDecimal.ZERO;
+            if (currency == null || currency.isBlank()) currency = course.getCurrency() != null ? course.getCurrency() : "ETB";
+            totalAmount = totalAmount.add(lineAmount);
+            OrderItem item = OrderItem.builder()
+                    .order(order)
+                    .course(course)
+                    .amount(lineAmount)
+                    .build();
+            orderItemRepository.save(item);
+        }
+        order.setTotalAmount(totalAmount);
+        order.setCurrency(currency);
+        orderRepository.save(order);
+
+        Payment payment = Payment.builder()
+                .student(student)
+                .order(order)
+                .amount(totalAmount)
+                .currency(currency)
+                .gateway("CHAPA")
+                .status("PENDING")
+                .netAmount(totalAmount)
+                .referralCode(request.getReferrerId() != null ? request.getReferrerId().toString() : null)
+                .build();
+        payment = paymentRepository.save(payment);
+
+        String txRef = CHAPA_TX_REF_PREFIX + payment.getId();
+        String callbackUrl = chapaConfig.getCallbackBaseUrl() + "/api/payments/chapa/callback";
+        String returnUrl = chapaConfig.getFrontendBaseUrl() + "/cart/checkout/success?paymentId=" + payment.getId();
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            returnUrl = chapaConfig.getFrontendBaseUrl() + "/" + request.getSlug().replaceFirst("^/", "") + "?paymentId=" + payment.getId();
+        }
+
+        String checkoutUrl = chapaService.initializeTransaction(
+                totalAmount,
                 currency,
                 student.getEmail(),
                 student.getFirstName(),
@@ -172,7 +258,14 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setTransactionId(refId);
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
-        enrollmentService.createEnrollmentForPayment(paymentId);
+        if (payment.getOrder() != null) {
+            payment.getOrder().setStatus("COMPLETED");
+            payment.getOrder().setPaidAt(LocalDateTime.now());
+            orderRepository.save(payment.getOrder());
+            enrollmentService.createEnrollmentsForOrder(payment.getOrder().getId(), paymentId);
+        } else {
+            enrollmentService.createEnrollmentForPayment(paymentId);
+        }
     }
 
     private User resolveAuthenticatedUser() {
@@ -184,28 +277,30 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new IllegalStateException("User not found"));
     }
 
-    private Payment toEntity(PaymentDTO payment) {
-        var studentId = payment.getStudent() != null ? payment.getStudent().getId() : null;
-        var courseId = payment.getCourse() != null ? payment.getCourse().getId() : null;
-        var couponId = payment.getCoupon() != null ? payment.getCoupon().getId() : null;
+    private Payment toEntity(PaymentDTO dto) {
+        var studentId = dto.getStudent() != null ? dto.getStudent().getId() : null;
+        var orderId = dto.getOrder() != null ? dto.getOrder().getId() : null;
+        var courseId = dto.getCourse() != null ? dto.getCourse().getId() : null;
+        var couponId = dto.getCoupon() != null ? dto.getCoupon().getId() : null;
         return Payment.builder()
-                .transactionId(payment.getTransactionId())
+                .transactionId(dto.getTransactionId())
                 .student(studentId != null ? userRepository.findById(studentId).orElse(null) : null)
+                .order(orderId != null ? orderRepository.findById(orderId).orElse(null) : null)
                 .course(courseId != null ? courseRepository.findById(courseId).orElse(null) : null)
-                .amount(payment.getAmount())
-                .currency(payment.getCurrency())
-                .gateway(payment.getGateway())
-                .status(payment.getStatus())
-                .netAmount(payment.getNetAmount())
-                .platformShare(payment.getPlatformShare())
-                .instructorShare(payment.getInstructorShare())
+                .amount(dto.getAmount())
+                .currency(dto.getCurrency())
+                .gateway(dto.getGateway())
+                .status(dto.getStatus())
+                .netAmount(dto.getNetAmount())
+                .platformShare(dto.getPlatformShare())
+                .instructorShare(dto.getInstructorShare())
                 .coupon(couponId != null ? couponRepository.findById(couponId).orElse(null) : null)
-                .discountAmount(payment.getDiscountAmount())
-                .referralCode(payment.getReferralCode())
-                .referralDiscount(payment.getReferralDiscount())
-                .gatewayResponse(payment.getGatewayResponse())
-                .gatewayReference(payment.getGatewayReference())
-                .paidAt(payment.getPaidAt())
+                .discountAmount(dto.getDiscountAmount())
+                .referralCode(dto.getReferralCode())
+                .referralDiscount(dto.getReferralDiscount())
+                .gatewayResponse(dto.getGatewayResponse())
+                .gatewayReference(dto.getGatewayReference())
+                .paidAt(dto.getPaidAt())
                 .build();
     }
 
@@ -214,6 +309,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .id(payment.getId())
                 .transactionId(payment.getTransactionId())
                 .student(payment.getStudent() != null ? UserDTO.builder().id(payment.getStudent().getId()).build() : null)
+                .order(payment.getOrder() != null ? OrderDTO.builder().id(payment.getOrder().getId()).build() : null)
                 .course(payment.getCourse() != null ? CourseDTO.builder().id(payment.getCourse().getId()).build() : null)
                 .amount(payment.getAmount())
                 .currency(payment.getCurrency())

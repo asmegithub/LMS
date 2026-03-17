@@ -42,7 +42,12 @@ public class Payment {
     @JoinColumn(name = "student_id")
     private User student;
 
-    /** * Foreign Key linking to the Course purchased */
+    /** * Foreign Key linking to the Order (multi-course checkout). When set, course may be null. */
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
+    /** * Foreign Key linking to the Course purchased (single-course flow). Null when order is set. */
     @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;

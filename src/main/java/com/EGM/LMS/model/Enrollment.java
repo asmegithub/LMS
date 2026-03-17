@@ -54,6 +54,16 @@ public class Enrollment {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
+    /** * Foreign Key linking to the Order (when enrolled via multi-course checkout) */
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
+    /** * Foreign Key linking to the OrderItem (when enrolled via multi-course checkout) */
+    @ManyToOne
+    @JoinColumn(name = "order_item_id")
+    private OrderItem orderItem;
+
     /** * Overall course completion percentage (e.g., 75.50) */
     private BigDecimal progress;
 

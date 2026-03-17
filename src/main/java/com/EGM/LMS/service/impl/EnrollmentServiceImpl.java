@@ -6,10 +6,13 @@ import com.EGM.LMS.dto.InstructorEnrollmentSummaryDTO;
 import com.EGM.LMS.dto.PaymentDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Enrollment;
+import com.EGM.LMS.model.Order;
+import com.EGM.LMS.model.OrderItem;
 import com.EGM.LMS.model.User;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.EnrollmentRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
+import com.EGM.LMS.repository.OrderItemRepository;
 import com.EGM.LMS.repository.PaymentRepository;
 import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.EmailLogService;
@@ -37,6 +40,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final PaymentRepository paymentRepository;
+    private final OrderItemRepository orderItemRepository;
     private final InstructorProfileRepository instructorProfileRepository;
     private final ReferralBalanceService referralBalanceService;
     private final EmailLogService emailLogService;
@@ -169,6 +173,77 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 "SENT"
         );
         return toDto(savedEnrollment);
+    }
+
+    @Override
+    @Transactional
+    public List<EnrollmentDTO> createEnrollmentsForOrder(UUID orderId, UUID paymentId) {
+        var payment = paymentRepository.findById(paymentId).orElseThrow(() -> new IllegalArgumentException("Payment not found: " + paymentId));
+        if (!"COMPLETED".equalsIgnoreCase(payment.getStatus())) {
+            throw new IllegalStateException("Payment is not completed: " + paymentId);
+        }
+        var order = payment.getOrder();
+        if (order == null || !order.getId().equals(orderId)) {
+            throw new IllegalArgumentException("Order does not match payment");
+        }
+        var student = order.getStudent();
+        if (student == null) {
+            throw new IllegalStateException("Order must have student");
+        }
+        var items = orderItemRepository.findByOrder_Id(orderId);
+        var result = new java.util.ArrayList<EnrollmentDTO>();
+        for (OrderItem item : items) {
+            var course = item.getCourse();
+            if (course == null) continue;
+            var existing = enrollmentRepository.findFirstByStudent_IdAndCourse_Id(student.getId(), course.getId());
+            if (existing.isPresent()) {
+                result.add(toDto(existing.get()));
+                continue;
+            }
+            var savedEnrollment = enrollmentRepository.save(Enrollment.builder()
+                    .student(student)
+                    .course(course)
+                    .payment(payment)
+                    .order(order)
+                    .orderItem(item)
+                    .progress(BigDecimal.ZERO)
+                    .completedLessonsCount(0)
+                    .isCompleted(false)
+                    .enrolledAt(LocalDateTime.now())
+                    .build());
+
+            course.setEnrollmentCount(course.getEnrollmentCount() + 1);
+            courseRepository.save(course);
+
+            var instructor = course.getInstructor();
+            if (instructor != null) {
+                instructor.setTotalStudents(instructor.getTotalStudents() + 1);
+                instructorProfileRepository.save(instructor);
+            }
+
+            var coursePrice = item.getAmount() != null ? item.getAmount() : BigDecimal.ZERO;
+            try {
+                var referrerIdStr = payment.getReferralCode();
+                if (referrerIdStr != null && !referrerIdStr.isBlank() && coursePrice.compareTo(BigDecimal.ZERO) > 0) {
+                    var referrerId = UUID.fromString(referrerIdStr.trim());
+                    if (!referrerId.equals(student.getId())) {
+                        var referralAmount = coursePrice.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP);
+                        referralBalanceService.creditReferrer(referrerId, savedEnrollment.getId(), referralAmount);
+                    }
+                }
+            } catch (Exception e) {
+                // ignore invalid referrer id
+            }
+            emailLogService.recordEmail(
+                    student.getId(),
+                    student.getEmail(),
+                    "Enrollment confirmation: " + (course.getTitle() != null ? course.getTitle() : "Course"),
+                    "ENROLLMENT",
+                    "SENT"
+            );
+            result.add(toDto(savedEnrollment));
+        }
+        return result;
     }
 
     @Override

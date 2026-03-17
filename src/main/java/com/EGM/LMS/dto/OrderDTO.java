@@ -7,33 +7,24 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PaymentDTO {
-
+public class OrderDTO {
     private UUID id;
-    private String transactionId;
     private UserDTO student;
-    private OrderDTO order;
-    private CourseDTO course;
-    private BigDecimal amount;
+    private BigDecimal totalAmount;
     private String currency;
     private String gateway;
     private String status;
-    private BigDecimal netAmount;
-    private BigDecimal platformShare;
-    private BigDecimal instructorShare;
     private CouponDTO coupon;
     private BigDecimal discountAmount;
-    private String referralCode;
-    private BigDecimal referralDiscount;
-    private String gatewayResponse;
-    private String gatewayReference;
     private LocalDateTime paidAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<OrderItemDTO> items;
 }

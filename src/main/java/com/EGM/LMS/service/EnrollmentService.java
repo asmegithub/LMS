@@ -11,6 +11,8 @@ public interface EnrollmentService {
     EnrollmentDTO createEnrollment(EnrollmentDTO enrollment);
     /** Creates enrollment from a completed payment (e.g. after Chapa callback). No auth required. */
     EnrollmentDTO createEnrollmentForPayment(UUID paymentId);
+    /** Creates one enrollment per order item for a completed order. No auth required. */
+    List<EnrollmentDTO> createEnrollmentsForOrder(UUID orderId, UUID paymentId);
     List<EnrollmentDTO> getAllEnrollments();
     EnrollmentDTO getEnrollment(UUID enrollmentId);
     List<EnrollmentDTO> getMyEnrollments();
