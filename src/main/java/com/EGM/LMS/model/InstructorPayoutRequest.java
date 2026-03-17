@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
@@ -37,6 +38,16 @@ public class InstructorPayoutRequest {
     @JoinColumn(name = "bank_detail_id")
     private InstructorBankDetail bankDetail;
 
+    /** System-wide payout method option selected by instructor. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "method_option_id")
+    private PayoutMethodOption methodOption;
+
+    /** JSON string with payout destination details entered by instructor. */
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String payoutDetailsJson;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
@@ -44,6 +55,28 @@ public class InstructorPayoutRequest {
     @Builder.Default
     private String status = "PENDING";
 
+    /** Admin rejection reason (visible to instructor). */
+    @Column(length = 500)
+    private String rejectionReason;
+
+    /** Stored receipt file name uploaded by admin after transfer. */
+    @Column(length = 255)
+    private String receiptStoredFileName;
+
+    /** Original receipt file name uploaded by admin. */
+    @Column(length = 255)
+    private String receiptOriginalFileName;
+
+    /** Reviewed by admin. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewer_id")
+    private User reviewer;
+
+    private LocalDateTime reviewedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

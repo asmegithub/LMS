@@ -17,7 +17,15 @@ public class InstructorPayoutRequestDTO {
     private UUID id;
     private InstructorProfileDTO instructorProfile;
     private InstructorBankDetailDTO bankDetail;
+    private PayoutMethodOptionDTO methodOption;
+    private String payoutDetailsJson;
     private BigDecimal amount;
     private String status;
+    private String rejectionReason;
+    private String receiptUrl;
+    private String receiptOriginalFileName;
+    private UserDTO reviewer;
+    private LocalDateTime reviewedAt;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
