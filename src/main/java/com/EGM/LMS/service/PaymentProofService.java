@@ -26,6 +26,9 @@ public interface PaymentProofService {
     /** Admin: reject proof (no enrollment). */
     PaymentProofDTO reject(UUID proofId, String reason);
 
+    /** Student: resubmit a rejected proof with a new receipt file. */
+    PaymentProofDTO resubmit(UUID proofId, String storedFileName, String originalFileName, String note);
+
     PaymentProofDTO getById(UUID proofId);
 }
 

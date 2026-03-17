@@ -27,6 +27,7 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     private final PaymentAccountRepository paymentAccountRepository;
     private final CourseRepository courseRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final EnrollmentService enrollmentService;
@@ -138,7 +139,14 @@ public class PaymentProofServiceImpl implements PaymentProofService {
 
     @Override
     public PaymentProofDTO getById(UUID proofId) {
-        return toDto(paymentProofRepository.findById(proofId).orElseThrow());
+        var viewer = resolveAuthenticatedUser();
+        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(viewer.getRole());
+        boolean isOwner = proof.getStudent() != null && proof.getStudent().getId() != null && proof.getStudent().getId().equals(viewer.getId());
+        if (!isAdmin && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+        }
+        return toDto(proof);
     }
 
     @Override
@@ -229,6 +237,46 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         return toDto(proof);
     }
 
+    @Override
+    @Transactional
+    public PaymentProofDTO resubmit(UUID proofId, String storedFileName, String originalFileName, String note) {
+        var student = resolveAuthenticatedUser();
+        if (!"STUDENT".equalsIgnoreCase(student.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only students can resubmit");
+        }
+        if (storedFileName == null || storedFileName.isBlank()) {
+            throw new IllegalArgumentException("receipt file is required");
+        }
+        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        if (proof.getStudent() == null || proof.getStudent().getId() == null || !proof.getStudent().getId().equals(student.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Payment proof does not belong to student");
+        }
+        if (!"REJECTED".equalsIgnoreCase(proof.getStatus())) {
+            throw new IllegalStateException("Only rejected proofs can be resubmitted");
+        }
+
+        proof.setStoredFileName(storedFileName);
+        proof.setOriginalFileName(originalFileName);
+        proof.setNote(note);
+        proof.setStatus("PENDING");
+        proof.setReviewer(null);
+        proof.setReviewedAt(null);
+        proof.setRejectionReason(null);
+        proof.setPayment(null);
+        paymentProofRepository.save(proof);
+
+        notificationService.notifyAdmins(
+                "PAYMENT_PROOF_RESUBMITTED",
+                "Manual payment receipt resubmitted",
+                "A student resubmitted a payment receipt (" + student.getEmail() + ")",
+                "PaymentProof",
+                proof.getId().toString(),
+                "/admin/payments"
+        );
+
+        return toDto(proof);
+    }
+
     private User resolveAuthenticatedUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
@@ -240,11 +288,46 @@ public class PaymentProofServiceImpl implements PaymentProofService {
 
     private PaymentProofDTO toDto(PaymentProof p) {
         String receiptUrl = "/uploads/payment-proofs/" + p.getStoredFileName();
+        UserDTO studentDto = null;
+        if (p.getStudent() != null) {
+            studentDto = UserDTO.builder()
+                    .id(p.getStudent().getId())
+                    .firstName(p.getStudent().getFirstName())
+                    .lastName(p.getStudent().getLastName())
+                    .email(p.getStudent().getEmail())
+                    .build();
+        }
+        CourseDTO courseDto = null;
+        if (p.getCourse() != null) {
+            courseDto = CourseDTO.builder()
+                    .id(p.getCourse().getId())
+                    .title(p.getCourse().getTitle())
+                    .build();
+        }
+        OrderDTO orderDto = null;
+        if (p.getOrder() != null) {
+            var items = orderItemRepository.findByOrder_Id(p.getOrder().getId()).stream()
+                    .map(item -> OrderItemDTO.builder()
+                            .id(item.getId())
+                            .course(item.getCourse() != null ? CourseDTO.builder()
+                                    .id(item.getCourse().getId())
+                                    .title(item.getCourse().getTitle())
+                                    .build() : null)
+                            .amount(item.getAmount())
+                            .platformShare(item.getPlatformShare())
+                            .instructorShare(item.getInstructorShare())
+                            .build())
+                    .toList();
+            orderDto = OrderDTO.builder()
+                    .id(p.getOrder().getId())
+                    .items(items)
+                    .build();
+        }
         return PaymentProofDTO.builder()
                 .id(p.getId())
-                .student(p.getStudent() != null ? UserDTO.builder().id(p.getStudent().getId()).build() : null)
-                .course(p.getCourse() != null ? CourseDTO.builder().id(p.getCourse().getId()).build() : null)
-                .order(p.getOrder() != null ? OrderDTO.builder().id(p.getOrder().getId()).build() : null)
+                .student(studentDto)
+                .course(courseDto)
+                .order(orderDto)
                 .paymentAccount(p.getPaymentAccount() != null ? PaymentAccountDTO.builder().id(p.getPaymentAccount().getId()).build() : null)
                 .amount(p.getAmount())
                 .currency(p.getCurrency())

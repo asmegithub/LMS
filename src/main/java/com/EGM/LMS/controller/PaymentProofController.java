@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.MimeTypeUtils;
+
 @RestController
 @RequestMapping("/api/payment-proofs")
 public class PaymentProofController {
@@ -107,6 +111,45 @@ public class PaymentProofController {
     @GetMapping("/{proofId}")
     ResponseEntity<PaymentProofDTO> getById(@PathVariable UUID proofId) {
         return ResponseEntity.ok(paymentProofService.getById(proofId));
+    }
+
+    /** Admin/authenticated: serve receipt file for preview (e.g. in admin dashboard). */
+    @GetMapping("/{proofId}/receipt")
+    ResponseEntity<byte[]> serveReceipt(@PathVariable UUID proofId) throws IOException {
+        PaymentProofDTO dto = paymentProofService.getById(proofId);
+        if (dto.getReceiptUrl() == null || dto.getReceiptUrl().isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+        String filename = dto.getReceiptUrl().substring(dto.getReceiptUrl().lastIndexOf('/') + 1);
+        Path path = uploadPath.resolve(filename);
+        if (!Files.isRegularFile(path)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        byte[] bytes = Files.readAllBytes(path);
+        String contentType = Files.probeContentType(path);
+        if (contentType == null || contentType.isBlank()) {
+            contentType = MimeTypeUtils.IMAGE_JPEG_VALUE;
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (dto.getOriginalFileName() != null ? dto.getOriginalFileName() : filename) + "\"")
+                .body(bytes);
+    }
+
+    /** Student: resubmit a rejected proof with new receipt (reopens as PENDING). */
+    @PostMapping(value = "/{proofId}/resubmit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<PaymentProofDTO> resubmit(
+            @PathVariable UUID proofId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        var stored = storeFile(file);
+        return ResponseEntity.ok(paymentProofService.resubmit(
+                proofId,
+                stored.storedFileName,
+                stored.originalFileName,
+                note
+        ));
     }
 
     private record StoredFile(String storedFileName, String originalFileName) {}
