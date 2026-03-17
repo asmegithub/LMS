@@ -7,7 +7,6 @@ import com.EGM.LMS.dto.PaymentDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Enrollment;
 import com.EGM.LMS.model.InstructorEarning;
-import com.EGM.LMS.model.Order;
 import com.EGM.LMS.model.OrderItem;
 import com.EGM.LMS.model.User;
 import com.EGM.LMS.repository.CourseRepository;
@@ -223,10 +222,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             if (instructor != null) {
                 instructor.setTotalStudents(instructor.getTotalStudents() + 1);
                 instructorProfileRepository.save(instructor);
-                creditInstructorEarning(instructor.getId(), coursePrice);
             }
 
             var coursePrice = item.getAmount() != null ? item.getAmount() : BigDecimal.ZERO;
+            if (instructor != null) {
+                creditInstructorEarning(instructor.getId(), coursePrice);
+            }
             try {
                 var referrerIdStr = payment.getReferralCode();
                 if (referrerIdStr != null && !referrerIdStr.isBlank() && coursePrice.compareTo(BigDecimal.ZERO) > 0) {
