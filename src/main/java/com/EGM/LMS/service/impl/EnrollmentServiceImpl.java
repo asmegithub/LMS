@@ -6,11 +6,13 @@ import com.EGM.LMS.dto.InstructorEnrollmentSummaryDTO;
 import com.EGM.LMS.dto.PaymentDTO;
 import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.model.Enrollment;
+import com.EGM.LMS.model.InstructorEarning;
 import com.EGM.LMS.model.Order;
 import com.EGM.LMS.model.OrderItem;
 import com.EGM.LMS.model.User;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.EnrollmentRepository;
+import com.EGM.LMS.repository.InstructorEarningRepository;
 import com.EGM.LMS.repository.InstructorProfileRepository;
 import com.EGM.LMS.repository.OrderItemRepository;
 import com.EGM.LMS.repository.PaymentRepository;
@@ -42,6 +44,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final PaymentRepository paymentRepository;
     private final OrderItemRepository orderItemRepository;
     private final InstructorProfileRepository instructorProfileRepository;
+    private final InstructorEarningRepository instructorEarningRepository;
     private final ReferralBalanceService referralBalanceService;
     private final EmailLogService emailLogService;
 
@@ -96,6 +99,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (instructor != null) {
             instructor.setTotalStudents(instructor.getTotalStudents() + 1);
             instructorProfileRepository.save(instructor);
+            creditInstructorEarning(instructor.getId(), coursePrice);
         }
 
         var referrerId = enrollment.getReferrerId();
@@ -219,6 +223,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             if (instructor != null) {
                 instructor.setTotalStudents(instructor.getTotalStudents() + 1);
                 instructorProfileRepository.save(instructor);
+                creditInstructorEarning(instructor.getId(), coursePrice);
             }
 
             var coursePrice = item.getAmount() != null ? item.getAmount() : BigDecimal.ZERO;
@@ -244,6 +249,25 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             result.add(toDto(savedEnrollment));
         }
         return result;
+    }
+
+    private void creditInstructorEarning(UUID instructorProfileId, BigDecimal amount) {
+        if (instructorProfileId == null) return;
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return;
+        InstructorEarning earning = instructorEarningRepository
+                .findFirstByInstructorProfile_Id(instructorProfileId)
+                .orElseGet(() -> instructorEarningRepository.save(InstructorEarning.builder()
+                        .instructorProfile(instructorProfileRepository.findById(instructorProfileId).orElse(null))
+                        .totalEarnings(BigDecimal.ZERO)
+                        .totalWithdrawn(BigDecimal.ZERO)
+                        .currentBalance(BigDecimal.ZERO)
+                        .lastMonthEarning(BigDecimal.ZERO)
+                        .build()));
+        BigDecimal total = earning.getTotalEarnings() != null ? earning.getTotalEarnings() : BigDecimal.ZERO;
+        BigDecimal balance = earning.getCurrentBalance() != null ? earning.getCurrentBalance() : BigDecimal.ZERO;
+        earning.setTotalEarnings(total.add(amount));
+        earning.setCurrentBalance(balance.add(amount));
+        instructorEarningRepository.save(earning);
     }
 
     @Override
