@@ -302,8 +302,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .map(this::toDto);
     }
 
-        @Override
-        public InstructorEnrollmentSummaryDTO getMyInstructorEnrollmentSummary() {
+    @Override
+    public InstructorEnrollmentSummaryDTO getMyInstructorEnrollmentSummary() {
         var instructorUser = resolveAuthenticatedUser();
         var enrollments = enrollmentRepository.findAllByCourse_Instructor_User_Id(instructorUser.getId());
 
@@ -326,7 +326,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             .totalStudents(totalStudents)
             .totalCourses(totalCourses)
             .build();
-        }
+    }
 
     @Override
     public List<EnrollmentDTO> getMyInstructorEnrollments() {

@@ -14,8 +14,10 @@ import com.EGM.LMS.service.CourseService;
 import com.EGM.LMS.service.NotificationService;
 import com.EGM.LMS.service.WebPushService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -107,6 +109,14 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.deleteById(courseId);
     }
 
+    @Override
+    public CourseDTO setFeatured(UUID courseId, boolean isFeatured) {
+        requireAdmin();
+        var existingCourse = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        existingCourse.setFeatured(isFeatured);
+        return toDto(courseRepository.save(existingCourse));
+    }
+
     // mapper methods
     Course toEntity(CourseDTO coursedto) {
         return Course.builder()
@@ -133,6 +143,8 @@ public class CourseServiceImpl implements CourseService {
                 .price(coursedto.getPrice())
                 .discountPrice(coursedto.getDiscountPrice())
                 .currency(coursedto.getCurrency())
+                .isFeatured(Boolean.TRUE.equals(coursedto.getIsFeatured()))
+                .isPopular(Boolean.TRUE.equals(coursedto.getIsPopular()))
 
                 .build();
     }
@@ -194,6 +206,20 @@ public class CourseServiceImpl implements CourseService {
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .build();
+    }
+
+    private void requireAdmin() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        var user = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+        if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin only");
+        }
     }
 
     private InstructorProfile resolveInstructor(CourseDTO coursedto) {

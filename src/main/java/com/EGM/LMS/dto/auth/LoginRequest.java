@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class LoginRequest {
     private String email;
     private String password;
+    /** If true, terminate other active sessions for this user and login anyway. */
+    private Boolean forceLogin;
 }

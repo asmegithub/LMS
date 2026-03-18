@@ -5,6 +5,7 @@ import com.EGM.LMS.dto.auth.AuthResponse;
 import com.EGM.LMS.dto.auth.LoginRequest;
 import com.EGM.LMS.dto.auth.RefreshRequest;
 import com.EGM.LMS.dto.auth.SignupRequest;
+import com.EGM.LMS.exception.ConcurrentLoginException;
 import com.EGM.LMS.model.User;
 import com.EGM.LMS.model.UserSession;
 import com.EGM.LMS.repository.UserRepository;
@@ -66,6 +67,22 @@ public class AuthServiceImpl implements AuthService {
 
         if (user.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials.");
+        }
+
+        var now = LocalDateTime.now();
+        var activeSessions = userSessionRepository.findByUser_IdAndIsActiveTrueAndExpiresAtAfter(user.getId(), now);
+        var force = Boolean.TRUE.equals(request.getForceLogin());
+        if (!activeSessions.isEmpty() && !force) {
+            throw new ConcurrentLoginException(
+                    "ALREADY_LOGGED_IN",
+                    "You have already logged in in an other device."
+            );
+        }
+        if (force && !activeSessions.isEmpty()) {
+            for (var s : activeSessions) {
+                s.setActive(false);
+            }
+            userSessionRepository.saveAll(activeSessions);
         }
 
         user.setLastLoginAt(LocalDateTime.now());
@@ -161,6 +178,16 @@ public class AuthServiceImpl implements AuthService {
         }
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
+
+        // OAuth login has no "force" prompt; to keep single-device behavior, revoke other active sessions.
+        var now = LocalDateTime.now();
+        var activeSessions = userSessionRepository.findByUser_IdAndIsActiveTrueAndExpiresAtAfter(user.getId(), now);
+        if (!activeSessions.isEmpty()) {
+            for (var s : activeSessions) {
+                s.setActive(false);
+            }
+            userSessionRepository.saveAll(activeSessions);
+        }
 
         return buildAuthResponse(user, ipAddress, userAgent);
     }

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -33,6 +34,18 @@ public class CourseController {
     @PutMapping("/{courseId}")
     ResponseEntity<CourseDTO> updateCourse(@PathVariable UUID courseId, @RequestBody CourseDTO coursedto){
         return ResponseEntity.ok( courseService.updateCourse( courseId, coursedto ) );
+    }
+
+    /** Admin: feature/unfeature a course for the homepage. Body: { "isFeatured": true } */
+    @PatchMapping("/{courseId}/featured")
+    ResponseEntity<CourseDTO> setFeatured(@PathVariable UUID courseId, @RequestBody Map<String, Object> body){
+        boolean isFeatured = false;
+        if (body != null && body.get("isFeatured") != null) {
+            var v = body.get("isFeatured");
+            if (v instanceof Boolean b) isFeatured = b;
+            else isFeatured = Boolean.parseBoolean(String.valueOf(v));
+        }
+        return ResponseEntity.ok(courseService.setFeatured(courseId, isFeatured));
     }
     @DeleteMapping("/{courseId}")
     ResponseEntity<Void> deleteCourse(@PathVariable UUID courseId){

@@ -12,6 +12,8 @@ public interface CourseService {
     List<CourseDTO> getCoursesByStatus(String status);
     CourseDTO getCourse(UUID courseId);
     CourseDTO updateCourse(UUID courseId,CourseDTO coursedto);
+    /** Admin: toggle course featured flag. */
+    CourseDTO setFeatured(UUID courseId, boolean isFeatured);
     void deleteCourse(UUID courseId);
 
 

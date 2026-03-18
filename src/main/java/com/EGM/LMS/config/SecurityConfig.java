@@ -2,6 +2,7 @@ package com.EGM.LMS.config;
 
 import com.EGM.LMS.security.JwtAuthenticationFilter;
 import com.EGM.LMS.security.OAuth2LoginSuccessHandler;
+import com.EGM.LMS.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final UserSessionRepository userSessionRepository;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -50,7 +52,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtDecoder jwtDecoder) {
-        return new JwtAuthenticationFilter(jwtDecoder);
+        return new JwtAuthenticationFilter(jwtDecoder, userSessionRepository);
     }
 
     @Bean
