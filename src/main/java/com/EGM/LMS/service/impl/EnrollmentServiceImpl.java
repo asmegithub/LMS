@@ -19,6 +19,7 @@ import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.EmailLogService;
 import com.EGM.LMS.service.EnrollmentService;
 import com.EGM.LMS.service.ReferralBalanceService;
+import com.EGM.LMS.service.SystemSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,62 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final InstructorEarningRepository instructorEarningRepository;
     private final ReferralBalanceService referralBalanceService;
     private final EmailLogService emailLogService;
+    private final SystemSettingService systemSettingService;
+
+    private BigDecimal resolvePlatformFeePercent() {
+        var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
+                .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
+        if (setting.isEmpty()) return BigDecimal.ZERO;
+        var raw = setting.get().getValue();
+        if (raw == null) return BigDecimal.ZERO;
+
+        try {
+            var pct = new BigDecimal(raw);
+            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            return pct;
+        } catch (Exception ignored) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private BigDecimal calculateInstructorShare(BigDecimal grossAmount) {
+        if (grossAmount == null) return BigDecimal.ZERO;
+        if (grossAmount.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+
+        var platformFeePercent = resolvePlatformFeePercent();
+        var platformShare = grossAmount
+                .multiply(platformFeePercent)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+        var instructorShare = grossAmount.subtract(platformShare);
+        if (instructorShare.compareTo(BigDecimal.ZERO) < 0) instructorShare = BigDecimal.ZERO;
+        return instructorShare;
+    }
+
+    private BigDecimal resolveReferralRewardPercent() {
+        var setting = systemSettingService.getSystemSettingByKey("REFERRAL_REWARD_PERCENT")
+                .or(() -> systemSettingService.getSystemSettingByKey("REFERRAL_PERCENT"));
+        if (setting.isEmpty()) return new BigDecimal("5");
+        var raw = setting.get().getValue();
+        if (raw == null) return new BigDecimal("5");
+
+        try {
+            var pct = new BigDecimal(raw);
+            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            return pct;
+        } catch (Exception ignored) {
+            return new BigDecimal("5");
+        }
+    }
+
+    private BigDecimal calculateReferralReward(BigDecimal grossAmount) {
+        if (grossAmount == null || grossAmount.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        return grossAmount
+                .multiply(resolveReferralRewardPercent())
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+    }
 
     @Override
     @Transactional
@@ -66,6 +123,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             return toDto(existingEnrollment.get());
         }
 
+        // Base enrollment price (used when enrollment is created directly from course price/discount).
         var coursePrice = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
                 ? course.getDiscountPrice() : course.getPrice();
         if (coursePrice == null) coursePrice = BigDecimal.ZERO;
@@ -98,12 +156,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (instructor != null) {
             instructor.setTotalStudents(instructor.getTotalStudents() + 1);
             instructorProfileRepository.save(instructor);
-            creditInstructorEarning(instructor.getId(), coursePrice);
+            creditInstructorEarning(instructor.getId(), calculateInstructorShare(coursePrice));
         }
 
         var referrerId = enrollment.getReferrerId();
         if (referrerId != null && !referrerId.equals(student.getId()) && coursePrice.compareTo(BigDecimal.ZERO) > 0) {
-            var referralAmount = coursePrice.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP);
+            var referralAmount = calculateReferralReward(coursePrice);
             referralBalanceService.creditReferrer(referrerId, savedEnrollment.getId(), referralAmount);
         }
 
@@ -161,13 +219,18 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             if (referrerIdStr != null && !referrerIdStr.isBlank() && coursePrice.compareTo(BigDecimal.ZERO) > 0) {
                 var referrerId = UUID.fromString(referrerIdStr.trim());
                 if (!referrerId.equals(student.getId())) {
-                    var referralAmount = coursePrice.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP);
+                    var referralAmount = calculateReferralReward(coursePrice);
                     referralBalanceService.creditReferrer(referrerId, savedEnrollment.getId(), referralAmount);
                 }
             }
         } catch (Exception e) {
             // ignore invalid referrer id in referralCode
         }
+
+        if (instructor != null) {
+            creditInstructorEarning(instructor.getId(), calculateInstructorShare(coursePrice));
+        }
+
         emailLogService.recordEmail(
                 student.getId(),
                 student.getEmail(),
@@ -226,14 +289,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
             var coursePrice = item.getAmount() != null ? item.getAmount() : BigDecimal.ZERO;
             if (instructor != null) {
-                creditInstructorEarning(instructor.getId(), coursePrice);
+                creditInstructorEarning(instructor.getId(), calculateInstructorShare(coursePrice));
             }
             try {
                 var referrerIdStr = payment.getReferralCode();
                 if (referrerIdStr != null && !referrerIdStr.isBlank() && coursePrice.compareTo(BigDecimal.ZERO) > 0) {
                     var referrerId = UUID.fromString(referrerIdStr.trim());
                     if (!referrerId.equals(student.getId())) {
-                        var referralAmount = coursePrice.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP);
+                        var referralAmount = calculateReferralReward(coursePrice);
                         referralBalanceService.creditReferrer(referrerId, savedEnrollment.getId(), referralAmount);
                     }
                 }
@@ -302,8 +365,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .map(this::toDto);
     }
 
-    @Override
-    public InstructorEnrollmentSummaryDTO getMyInstructorEnrollmentSummary() {
+        @Override
+        public InstructorEnrollmentSummaryDTO getMyInstructorEnrollmentSummary() {
         var instructorUser = resolveAuthenticatedUser();
         var enrollments = enrollmentRepository.findAllByCourse_Instructor_User_Id(instructorUser.getId());
 
@@ -326,7 +389,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             .totalStudents(totalStudents)
             .totalCourses(totalCourses)
             .build();
-    }
+        }
 
     @Override
     public List<EnrollmentDTO> getMyInstructorEnrollments() {

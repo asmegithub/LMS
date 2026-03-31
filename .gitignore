@@ -35,3 +35,4 @@ build/
 ### App uploads ###
 uploads/payment-proofs/
 uploads/payout-receipts/
+uploads/certificates/

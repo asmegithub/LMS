@@ -4,12 +4,12 @@ import com.EGM.LMS.dto.EnrollmentDTO;
 import com.EGM.LMS.dto.LessonDTO;
 import com.EGM.LMS.dto.LessonProgressDTO;
 import com.EGM.LMS.dto.UserDTO;
-import com.EGM.LMS.model.Enrollment;
 import com.EGM.LMS.model.LessonProgress;
 import com.EGM.LMS.repository.EnrollmentRepository;
 import com.EGM.LMS.repository.LessonProgressRepository;
 import com.EGM.LMS.repository.LessonRepository;
 import com.EGM.LMS.repository.UserRepository;
+import com.EGM.LMS.service.CertificateService;
 import com.EGM.LMS.service.LessonProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +29,7 @@ public class LessonProgressServiceImpl implements LessonProgressService {
     private final EnrollmentRepository enrollmentRepository;
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
+    private final CertificateService certificateService;
 
     @Override
     public LessonProgressDTO createLessonProgress(LessonProgressDTO lessonProgress) {
@@ -86,11 +87,20 @@ public class LessonProgressServiceImpl implements LessonProgressService {
         var totalLessons = lessonRepository.findBySection_Course_IdOrderBySection_OrderIndexAscOrderIndexAsc(enrollment.getCourse().getId()).size();
         enrollment.setCompletedLessonsCount((int) completedCount);
         enrollment.setProgress(totalLessons > 0 ? java.math.BigDecimal.valueOf(100.0 * completedCount / totalLessons) : java.math.BigDecimal.ZERO);
+        boolean wasCompleted = enrollment.isCompleted();
         if (totalLessons > 0 && completedCount >= totalLessons) {
             enrollment.setCompleted(true);
             enrollment.setCompletedAt(LocalDateTime.now());
         }
         enrollmentRepository.save(enrollment);
+
+        if (!wasCompleted && enrollment.isCompleted()) {
+            try {
+                certificateService.issueForEnrollment(enrollment.getId());
+            } catch (Exception ignored) {
+                // Certificate issuance should not block progress recording.
+            }
+        }
 
         return toDto(entity);
     }

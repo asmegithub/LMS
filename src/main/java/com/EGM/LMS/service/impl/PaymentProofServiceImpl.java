@@ -7,6 +7,7 @@ import com.EGM.LMS.service.EmailLogService;
 import com.EGM.LMS.service.EnrollmentService;
 import com.EGM.LMS.service.NotificationService;
 import com.EGM.LMS.service.PaymentProofService;
+import com.EGM.LMS.service.SystemSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +35,38 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     private final EnrollmentService enrollmentService;
     private final NotificationService notificationService;
     private final EmailLogService emailLogService;
+    private final SystemSettingService systemSettingService;
+
+    private BigDecimal resolvePlatformFeePercent() {
+        var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
+                .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
+        if (setting.isEmpty()) return BigDecimal.ZERO;
+        var raw = setting.get().getValue();
+        if (raw == null) return BigDecimal.ZERO;
+        try {
+            var pct = new BigDecimal(raw);
+            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            return pct;
+        } catch (Exception ignored) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private BigDecimal[] computeShares(BigDecimal amount) {
+        if (amount == null) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+
+        var platformFeePercent = resolvePlatformFeePercent();
+        var platformShare = amount
+                .multiply(platformFeePercent)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        if (platformShare.compareTo(BigDecimal.ZERO) < 0) platformShare = BigDecimal.ZERO;
+        if (platformShare.compareTo(amount) > 0) platformShare = amount;
+        var instructorShare = amount.subtract(platformShare);
+        if (instructorShare.compareTo(BigDecimal.ZERO) < 0) instructorShare = BigDecimal.ZERO;
+        return new BigDecimal[]{platformShare, instructorShare};
+    }
 
     @Override
     @Transactional
@@ -164,6 +198,7 @@ public class PaymentProofServiceImpl implements PaymentProofService {
             return toDto(proof);
         }
 
+        var shares = computeShares(proof.getAmount());
         // Create a COMPLETED payment (manual) and then enroll using existing logic.
         Payment payment = Payment.builder()
                 .student(proof.getStudent())
@@ -174,6 +209,8 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                 .gateway("MANUAL")
                 .status("COMPLETED")
                 .netAmount(proof.getAmount())
+                .platformShare(shares[0])
+                .instructorShare(shares[1])
                 .paidAt(LocalDateTime.now())
                 .gatewayReference("paymentProof:" + proof.getId())
                 .build();

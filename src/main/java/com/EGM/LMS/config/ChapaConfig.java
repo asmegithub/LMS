@@ -9,7 +9,7 @@ public class ChapaConfig {
     @Value("${app.chapa.secret-key:}")
     private String secretKey;
 
-    @Value("${app.chapa.frontend-base-url:http://localhost:8081}")
+    @Value("${app.chapa.frontend-base-url:http://localhost:8080}")
     private String frontendBaseUrl;
 
     @Value("${app.chapa.callback-base-url:http://localhost:8080}")

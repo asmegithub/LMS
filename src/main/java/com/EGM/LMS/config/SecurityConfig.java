@@ -10,12 +10,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -27,6 +29,9 @@ public class SecurityConfig {
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
+
+    @Value("${app.oauth2.redirect-uri}")
+    private String oauthRedirectUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -44,7 +49,13 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
                     .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth -> oauth.successHandler(oAuth2LoginSuccessHandler))
+                .oauth2Login(oauth -> oauth
+                    .successHandler(oAuth2LoginSuccessHandler)
+                    .failureHandler((request, response, exception) -> {
+                        String redirect = buildOAuthFailureRedirect(exception);
+                        response.sendRedirect(redirect);
+                    })
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -70,6 +81,16 @@ public class SecurityConfig {
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private String buildOAuthFailureRedirect(AuthenticationException exception) {
+        String message = exception != null && exception.getMessage() != null
+            ? exception.getMessage()
+            : "OAuth login failed";
+        return UriComponentsBuilder.fromUriString(oauthRedirectUri)
+            .queryParam("oauthError", message)
+            .build()
+            .toUriString();
     }
 
 }

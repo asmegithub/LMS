@@ -22,11 +22,13 @@ import com.EGM.LMS.model.User;
 import com.EGM.LMS.service.ChapaService;
 import com.EGM.LMS.service.EnrollmentService;
 import com.EGM.LMS.service.PaymentService;
+import com.EGM.LMS.service.SystemSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -45,6 +47,43 @@ public class PaymentServiceImpl implements PaymentService {
     private final ChapaConfig chapaConfig;
     private final ChapaService chapaService;
     private final EnrollmentService enrollmentService;
+    private final SystemSettingService systemSettingService;
+
+    private BigDecimal resolvePlatformFeePercent() {
+        var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
+                .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
+
+        if (setting.isEmpty()) return BigDecimal.ZERO;
+        var raw = setting.get().getValue();
+        if (raw == null) return BigDecimal.ZERO;
+
+        try {
+            var pct = new BigDecimal(raw);
+            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            return pct;
+        } catch (Exception ignored) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private BigDecimal[] computeShares(BigDecimal amount) {
+        if (amount == null) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+
+        var platformFeePercent = resolvePlatformFeePercent();
+        var platformShare = amount
+                .multiply(platformFeePercent)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+        if (platformShare.compareTo(BigDecimal.ZERO) < 0) platformShare = BigDecimal.ZERO;
+        if (platformShare.compareTo(amount) > 0) platformShare = amount;
+
+        var instructorShare = amount.subtract(platformShare);
+        if (instructorShare.compareTo(BigDecimal.ZERO) < 0) instructorShare = BigDecimal.ZERO;
+
+        return new BigDecimal[]{platformShare, instructorShare};
+    }
 
     @Override
     public PaymentDTO createPayment(PaymentDTO payment) {
@@ -57,6 +96,12 @@ public class PaymentServiceImpl implements PaymentService {
         }
         if (entity.getNetAmount() == null && entity.getAmount() != null) {
             entity.setNetAmount(entity.getAmount());
+        }
+
+        if (entity.getAmount() != null && (entity.getPlatformShare() == null || entity.getInstructorShare() == null)) {
+            var shares = computeShares(entity.getAmount());
+            entity.setPlatformShare(shares[0]);
+            entity.setInstructorShare(shares[1]);
         }
         return toDto(paymentRepository.save(entity));
     }
@@ -133,6 +178,7 @@ public class PaymentServiceImpl implements PaymentService {
         String currency = course.getCurrency() != null ? course.getCurrency() : "ETB";
         String slug = request.getSlug() != null ? request.getSlug() : course.getId().toString();
 
+        var shares = computeShares(amount);
         Payment payment = Payment.builder()
                 .student(student)
                 .course(course)
@@ -141,6 +187,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .gateway("CHAPA")
                 .status("PENDING")
                 .netAmount(amount)
+                .platformShare(shares[0])
+                .instructorShare(shares[1])
                 .referralCode(request.getReferrerId() != null ? request.getReferrerId().toString() : null)
                 .build();
         payment = paymentRepository.save(payment);
@@ -195,6 +243,7 @@ public class PaymentServiceImpl implements PaymentService {
         order.setCurrency(currency);
         orderRepository.save(order);
 
+        var shares = computeShares(totalAmount);
         Payment payment = Payment.builder()
                 .student(student)
                 .order(order)
@@ -203,6 +252,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .gateway("CHAPA")
                 .status("PENDING")
                 .netAmount(totalAmount)
+                .platformShare(shares[0])
+                .instructorShare(shares[1])
                 .referralCode(request.getReferrerId() != null ? request.getReferrerId().toString() : null)
                 .build();
         payment = paymentRepository.save(payment);

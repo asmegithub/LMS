@@ -1,14 +1,13 @@
 server:
   # Use 8080 (default); 808 can cause BindException: Permission denied on some systems
   port: ${SERVER_PORT:8080}
-
 spring:
   application:
     name: LMS
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
+      max-file-size: 1GB
+      max-request-size: 1GB
   datasource:
     url: jdbc:mysql://localhost:3306/LMS?createDatabaseIfNotExist=true
     username: root
@@ -27,7 +26,11 @@ spring:
             scope: openid,profile,email
         provider:
           google:
-            issuer-uri: https://accounts.google.com
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+            user-name-attribute: sub
 
 app:
   jwt:
@@ -35,7 +38,7 @@ app:
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 30
   # Frontend URL where user lands after OAuth (with ?accessToken=...&refreshToken=...)
-  # Frontend on 8081 → use http://localhost:8081/auth
+  # Frontend on 8081 -> use http://localhost:8081/auth
   oauth2:
     redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:8081/auth}
   cors:

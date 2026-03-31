@@ -17,7 +17,19 @@ public interface ReferralBalanceService {
     /** Uses referral balance to pay for course; returns payment id if successful. */
     Optional<UUID> useBalanceForEnrollment(UUID studentId, UUID courseId, BigDecimal amount);
 
-    WithdrawalRequestDTO requestWithdrawal(BigDecimal amount);
+    WithdrawalRequestDTO requestWithdrawal(BigDecimal amount, UUID methodOptionId, String payoutDetailsJson);
+
+    WithdrawalRequestDTO resubmitWithdrawal(UUID requestId, BigDecimal amount, UUID methodOptionId, String payoutDetailsJson);
 
     List<WithdrawalRequestDTO> getMyWithdrawals();
+
+    WithdrawalRequestDTO getWithdrawalById(UUID requestId);
+
+    List<WithdrawalRequestDTO> getPendingWithdrawalsForAdmin();
+
+    WithdrawalRequestDTO reportWithdrawalReceiptIssue(UUID requestId, String message);
+
+    WithdrawalRequestDTO approveWithdrawal(UUID requestId, String receiptStoredFileName, String receiptOriginalFileName);
+
+    WithdrawalRequestDTO rejectWithdrawal(UUID requestId, String reason);
 }

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -46,6 +47,13 @@ public class SystemSettingServiceImpl implements SystemSettingService {
     @Override
     public void deleteSystemSetting(UUID systemSettingId) {
         systemSettingRepository.deleteById(systemSettingId);
+    }
+
+    @Override
+    public Optional<SystemSettingDTO> getSystemSettingByKey(String key) {
+        if (key == null || key.isBlank()) return Optional.empty();
+        return systemSettingRepository.findFirstByKey(key)
+                .map(this::toDto);
     }
 
     private SystemSetting toEntity(SystemSettingDTO systemSetting) {

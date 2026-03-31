@@ -47,6 +47,18 @@ public class CourseController {
         }
         return ResponseEntity.ok(courseService.setFeatured(courseId, isFeatured));
     }
+
+    /** Admin/instructor owner: hide/unhide a course from public listings. Body: { "isPublished": true } */
+    @PatchMapping("/{courseId}/visibility")
+    ResponseEntity<CourseDTO> setVisibility(@PathVariable UUID courseId, @RequestBody Map<String, Object> body){
+        boolean isPublished = false;
+        if (body != null && body.get("isPublished") != null) {
+            var v = body.get("isPublished");
+            if (v instanceof Boolean b) isPublished = b;
+            else isPublished = Boolean.parseBoolean(String.valueOf(v));
+        }
+        return ResponseEntity.ok(courseService.setPublished(courseId, isPublished));
+    }
     @DeleteMapping("/{courseId}")
     ResponseEntity<Void> deleteCourse(@PathVariable UUID courseId){
         courseService.deleteCourse(courseId);

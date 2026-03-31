@@ -65,6 +65,7 @@ public class CourseDTO {
     /** Flags */
     private Boolean isFeatured;
     private Boolean isPopular;
+    private Boolean isPublished;
 
     /** Management Timestamps */
     private LocalDateTime publishedAt;

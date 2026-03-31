@@ -14,6 +14,8 @@ public interface CourseService {
     CourseDTO updateCourse(UUID courseId,CourseDTO coursedto);
     /** Admin: toggle course featured flag. */
     CourseDTO setFeatured(UUID courseId, boolean isFeatured);
+    /** Admin/instructor owner: toggle course visibility on public listings. */
+    CourseDTO setPublished(UUID courseId, boolean isPublished);
     void deleteCourse(UUID courseId);
 
 

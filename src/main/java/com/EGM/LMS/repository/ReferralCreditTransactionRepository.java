@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ReferralCreditTransactionRepository extends JpaRepository<ReferralCreditTransaction, UUID> {
 
     List<ReferralCreditTransaction> findByUser_IdOrderByCreatedAtDesc(UUID userId);
+
+    boolean existsByReferenceIdAndTypeIgnoreCase(UUID referenceId, String type);
 }
