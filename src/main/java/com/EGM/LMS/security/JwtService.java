@@ -21,8 +21,8 @@ public class JwtService {
     @Value("${app.jwt.access-token-ttl-minutes:15}")
     private long accessTokenTtlMinutes;
 
-    @Value("${app.jwt.refresh-token-ttl-days:30}")
-    private long refreshTokenTtlDays;
+    @Value("${app.jwt.refresh-token-ttl-hours:720}")
+    private long refreshTokenTtlHours;
 
     public String generateAccessToken(User user) {
         var now = Instant.now();
@@ -45,6 +45,6 @@ public class JwtService {
     }
 
     public Duration getRefreshTokenTtl() {
-        return Duration.ofDays(refreshTokenTtlDays);
+        return Duration.ofHours(refreshTokenTtlHours);
     }
 }

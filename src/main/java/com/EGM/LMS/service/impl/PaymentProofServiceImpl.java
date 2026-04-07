@@ -28,6 +28,7 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     private final PaymentProofRepository paymentProofRepository;
     private final PaymentAccountRepository paymentAccountRepository;
     private final CourseRepository courseRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
@@ -80,6 +81,9 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         if (storedFileName == null || storedFileName.isBlank()) throw new IllegalArgumentException("receipt file is required");
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        if (enrollmentRepository.findFirstByStudent_IdAndCourse_Id(student.getId(), courseId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in this course");
+        }
         PaymentAccount account = paymentAccountRepository.findById(paymentAccountId).orElseThrow(() -> new IllegalArgumentException("Payment account not found"));
         if (Boolean.FALSE.equals(account.getIsActive())) {
             throw new IllegalArgumentException("Payment account is not active");

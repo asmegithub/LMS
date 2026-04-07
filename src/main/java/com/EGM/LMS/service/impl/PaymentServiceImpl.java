@@ -14,6 +14,7 @@ import com.EGM.LMS.model.OrderItem;
 import com.EGM.LMS.model.Payment;
 import com.EGM.LMS.repository.CourseRepository;
 import com.EGM.LMS.repository.CouponRepository;
+import com.EGM.LMS.repository.EnrollmentRepository;
 import com.EGM.LMS.repository.OrderItemRepository;
 import com.EGM.LMS.repository.OrderRepository;
 import com.EGM.LMS.repository.PaymentRepository;
@@ -25,7 +26,9 @@ import com.EGM.LMS.service.PaymentService;
 import com.EGM.LMS.service.SystemSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,6 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final ChapaConfig chapaConfig;
     private final ChapaService chapaService;
     private final EnrollmentService enrollmentService;
+    private final EnrollmentRepository enrollmentRepository;
     private final SystemSettingService systemSettingService;
 
     private BigDecimal resolvePlatformFeePercent() {
@@ -172,6 +176,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private ChapaInitializeResponse initializeChapaPaymentSingle(User student, UUID courseId, ChapaInitializeRequest request) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        assertNotAlreadyEnrolled(student.getId(), course);
         BigDecimal amount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
                 ? course.getDiscountPrice() : course.getPrice();
         if (amount == null) amount = BigDecimal.ZERO;
@@ -216,6 +221,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private ChapaInitializeResponse initializeChapaPaymentMulti(User student, List<UUID> courseIds, ChapaInitializeRequest request) {
+        List<Course> courses = courseIds.stream()
+                .distinct()
+                .map(courseId -> courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId)))
+                .toList();
+        for (Course course : courses) {
+            assertNotAlreadyEnrolled(student.getId(), course);
+        }
+
         BigDecimal totalAmount = BigDecimal.ZERO;
         String currency = "ETB";
         Order order = Order.builder()
@@ -225,8 +238,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         order = orderRepository.save(order);
 
-        for (UUID courseId : courseIds) {
-            Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
+        for (Course course : courses) {
             BigDecimal lineAmount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
                     ? course.getDiscountPrice() : course.getPrice();
             if (lineAmount == null) lineAmount = BigDecimal.ZERO;
@@ -281,6 +293,19 @@ public class PaymentServiceImpl implements PaymentService {
                 .paymentId(payment.getId())
                 .txRef(txRef)
                 .build();
+    }
+
+    private void assertNotAlreadyEnrolled(UUID studentId, Course course) {
+        if (studentId == null || course == null || course.getId() == null) return;
+        boolean alreadyEnrolled = enrollmentRepository
+                .findFirstByStudent_IdAndCourse_Id(studentId, course.getId())
+                .isPresent();
+        if (alreadyEnrolled) {
+            String courseLabel = course.getTitle() != null && !course.getTitle().isBlank()
+                    ? course.getTitle()
+                    : course.getId().toString();
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in course: " + courseLabel);
+        }
     }
 
     @Override

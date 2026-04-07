@@ -5,6 +5,7 @@ import com.EGM.LMS.dto.QuestionOptionDTO;
 import com.EGM.LMS.model.QuestionOption;
 import com.EGM.LMS.repository.QuestionOptionRepository;
 import com.EGM.LMS.repository.QuestionRepository;
+import com.EGM.LMS.repository.QuizRepository;
 import com.EGM.LMS.service.QuestionOptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class QuestionOptionServiceImpl implements QuestionOptionService {
     private final QuestionOptionRepository questionOptionRepository;
     private final QuestionRepository questionRepository;
+    private final QuizRepository quizRepository;
 
     @Override
     public QuestionOptionDTO createQuestionOption(QuestionOptionDTO questionOption) {
@@ -24,8 +26,14 @@ public class QuestionOptionServiceImpl implements QuestionOptionService {
     }
 
     @Override
-    public List<QuestionOptionDTO> getAllQuestionOptions() {
-        var options = questionOptionRepository.findAll();
+    public List<QuestionOptionDTO> getAllQuestionOptions(UUID questionId, UUID quizId, UUID courseId) {
+        var options = questionId != null
+                ? questionOptionRepository.findAllByQuestion_Id(questionId)
+                : (quizId != null
+                    ? findOptionsByQuizId(quizId)
+                    : (courseId != null
+                        ? findOptionsByCourseId(courseId)
+                        : questionOptionRepository.findAll()));
         var optionDtos = new java.util.ArrayList<QuestionOptionDTO>();
         for (QuestionOption option : options) {
             optionDtos.add(toDto(option));
@@ -62,6 +70,23 @@ public class QuestionOptionServiceImpl implements QuestionOptionService {
                 .isCorrect(questionOption.getIsCorrect())
                 .orderIndex(questionOption.getOrderIndex())
                 .build();
+    }
+
+    private List<QuestionOption> findOptionsByQuizId(UUID quizId) {
+        var questions = questionRepository.findAllByQuiz_Id(quizId);
+        if (questions.isEmpty()) return java.util.List.of();
+        var questionIds = questions.stream().map(q -> q.getId()).toList();
+        return questionOptionRepository.findAllByQuestion_IdIn(questionIds);
+    }
+
+    private List<QuestionOption> findOptionsByCourseId(UUID courseId) {
+        var quizzes = quizRepository.findAllByLesson_Section_Course_Id(courseId);
+        if (quizzes.isEmpty()) return java.util.List.of();
+        var quizIds = quizzes.stream().map(q -> q.getId()).toList();
+        var questions = questionRepository.findAllByQuiz_IdIn(quizIds);
+        if (questions.isEmpty()) return java.util.List.of();
+        var questionIds = questions.stream().map(q -> q.getId()).toList();
+        return questionOptionRepository.findAllByQuestion_IdIn(questionIds);
     }
 
     private QuestionOptionDTO toDto(QuestionOption questionOption) {

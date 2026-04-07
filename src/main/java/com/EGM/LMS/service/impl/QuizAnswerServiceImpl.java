@@ -30,8 +30,12 @@ public class QuizAnswerServiceImpl implements QuizAnswerService {
     }
 
     @Override
-    public List<QuizAnswerDTO> getAllQuizAnswers() {
-        var answers = quizAnswerRepository.findAll();
+    public List<QuizAnswerDTO> getAllQuizAnswers(UUID studentId, UUID attemptId) {
+        var answers = attemptId != null
+                ? quizAnswerRepository.findAllByAttempt_Id(attemptId)
+                : (studentId != null
+                    ? quizAnswerRepository.findAllByAttempt_Student_Id(studentId)
+                    : quizAnswerRepository.findAll());
         var answerDtos = new java.util.ArrayList<QuizAnswerDTO>();
         for (QuizAnswer answer : answers) {
             answerDtos.add(toDto(answer));

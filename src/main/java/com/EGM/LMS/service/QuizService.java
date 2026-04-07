@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface QuizService {
     QuizDTO createQuiz(QuizDTO quiz);
-    List<QuizDTO> getAllQuizzes();
+    List<QuizDTO> getAllQuizzes(UUID lessonId, UUID courseId);
     QuizDTO getQuiz(UUID quizId);
     QuizDTO updateQuiz(UUID quizId, QuizDTO quiz);
     void deleteQuiz(UUID quizId);

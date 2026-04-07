@@ -27,8 +27,14 @@ public class QuizAttemptServiceImpl implements QuizAttemptService {
     }
 
     @Override
-    public List<QuizAttemptDTO> getAllQuizAttempts() {
-        var attempts = quizAttemptRepository.findAll();
+    public List<QuizAttemptDTO> getAllQuizAttempts(UUID studentId, UUID quizId) {
+        var attempts = studentId != null && quizId != null
+                ? quizAttemptRepository.findAllByStudent_IdAndQuiz_Id(studentId, quizId)
+                : (studentId != null
+                    ? quizAttemptRepository.findAllByStudent_Id(studentId)
+                    : (quizId != null
+                        ? quizAttemptRepository.findAllByQuiz_Id(quizId)
+                        : quizAttemptRepository.findAll()));
         var attemptDtos = new java.util.ArrayList<QuizAttemptDTO>();
         for (QuizAttempt attempt : attempts) {
             attemptDtos.add(toDto(attempt));

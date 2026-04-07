@@ -1,5 +1,6 @@
 package com.EGM.LMS.security;
 
+import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.repository.UserSessionRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -16,12 +16,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtDecoder jwtDecoder;
     private final UserSessionRepository userSessionRepository;
+    private final UserRepository userRepository;
+    private final RbacAuthorityService rbacAuthorityService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -53,10 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userSessionRepository.save(session);
 
             var email = jwt.getSubject();
-            var role = jwt.getClaimAsString("role");
-            var authorities = role != null
-                    ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                    : List.<SimpleGrantedAuthority>of();
+                var user = userRepository.findByEmail(email).orElse(null);
+                var authorities = rbacAuthorityService.buildAuthorities(user);
 
             var authentication = new UsernamePasswordAuthenticationToken(email, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -24,8 +24,12 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public List<QuizDTO> getAllQuizzes() {
-        var quizzes = quizRepository.findAll();
+    public List<QuizDTO> getAllQuizzes(UUID lessonId, UUID courseId) {
+        var quizzes = lessonId != null
+                ? quizRepository.findAllByLesson_Id(lessonId)
+                : (courseId != null
+                    ? quizRepository.findAllByLesson_Section_Course_Id(courseId)
+                    : quizRepository.findAll());
         var quizDtos = new java.util.ArrayList<QuizDTO>();
         for (Quiz q : quizzes) {
             quizDtos.add(toDto(q));

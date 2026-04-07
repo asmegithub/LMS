@@ -24,8 +24,10 @@ public class CourseRequirementServiceImpl implements CourseRequirementService {
     }
 
     @Override
-    public List<CourseRequirementDTO> getAllCourseRequirements() {
-        var requirements = courseRequirementRepository.findAll();
+    public List<CourseRequirementDTO> getAllCourseRequirements(UUID courseId) {
+        var requirements = courseId != null
+                ? courseRequirementRepository.findAllByCourse_Id(courseId)
+                : courseRequirementRepository.findAll();
         var requirementDtos = new java.util.ArrayList<CourseRequirementDTO>();
         for (CourseRequirement requirement : requirements) {
             requirementDtos.add(toDto(requirement));

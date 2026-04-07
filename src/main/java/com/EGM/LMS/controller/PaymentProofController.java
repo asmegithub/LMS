@@ -5,6 +5,7 @@ import com.EGM.LMS.service.PaymentProofService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -91,18 +92,21 @@ public class PaymentProofController {
 
     /** Admin: pending proofs. */
     @GetMapping("/pending")
+    @PreAuthorize("hasAuthority('payment-proofs.manage')")
     ResponseEntity<List<PaymentProofDTO>> pending() {
         return ResponseEntity.ok(paymentProofService.getPending());
     }
 
     /** Admin: approve proof. */
     @PostMapping("/{proofId}/approve")
+    @PreAuthorize("hasAuthority('payment-proofs.manage')")
     ResponseEntity<PaymentProofDTO> approve(@PathVariable UUID proofId) {
         return ResponseEntity.ok(paymentProofService.approve(proofId));
     }
 
     /** Admin: reject proof. */
     @PostMapping("/{proofId}/reject")
+    @PreAuthorize("hasAuthority('payment-proofs.manage')")
     ResponseEntity<PaymentProofDTO> reject(@PathVariable UUID proofId, @RequestBody Map<String, Object> body) {
         var reason = body != null && body.get("reason") != null ? String.valueOf(body.get("reason")) : null;
         return ResponseEntity.ok(paymentProofService.reject(proofId, reason));
@@ -115,6 +119,7 @@ public class PaymentProofController {
 
     /** Admin/authenticated: serve receipt file for preview (e.g. in admin dashboard). */
     @GetMapping("/{proofId}/receipt")
+    @PreAuthorize("hasAuthority('payment-proofs.manage')")
     ResponseEntity<byte[]> serveReceipt(@PathVariable UUID proofId) throws IOException {
         PaymentProofDTO dto = paymentProofService.getById(proofId);
         if (dto.getReceiptUrl() == null || dto.getReceiptUrl().isBlank()) {

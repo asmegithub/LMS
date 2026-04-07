@@ -3,11 +3,17 @@ package com.EGM.LMS.service.impl;
 import com.EGM.LMS.dto.CourseSectionDTO;
 import com.EGM.LMS.dto.LessonDTO;
 import com.EGM.LMS.model.Lesson;
+import com.EGM.LMS.model.User;
 import com.EGM.LMS.repository.CourseSectionRepository;
+import com.EGM.LMS.repository.EnrollmentRepository;
 import com.EGM.LMS.repository.LessonRepository;
+import com.EGM.LMS.repository.UserRepository;
 import com.EGM.LMS.service.LessonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +23,8 @@ import java.util.UUID;
 public class LessonServiceImpl implements LessonService {
     private final LessonRepository lessonRepository;
     private final CourseSectionRepository courseSectionRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
 
     @Override
     public LessonDTO createLesson(LessonDTO lesson) {
@@ -25,27 +33,40 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     public List<LessonDTO> getAllLessons() {
+        var user = resolveAuthenticatedUserOrNull();
         var lessons = lessonRepository.findAll();
         var lessonDtos = new java.util.ArrayList<LessonDTO>();
         for (Lesson lesson : lessons) {
-            lessonDtos.add(toDto(lesson));
+            var dto = toDto(lesson);
+            lessonDtos.add(canAccessFullLessonContent(lesson, user) ? dto : toLockedDto(dto));
         }
         return lessonDtos;
     }
 
     @Override
     public List<LessonDTO> getLessonsByCourseId(UUID courseId) {
+        var user = resolveAuthenticatedUserOrNull();
+        var canAccessPaidLessons = canAccessPaidLessonsInCourse(courseId, user);
         var lessons = lessonRepository.findBySection_Course_IdOrderBySection_OrderIndexAscOrderIndexAsc(courseId);
         var lessonDtos = new java.util.ArrayList<LessonDTO>();
         for (Lesson lesson : lessons) {
-            lessonDtos.add(toDto(lesson));
+            var dto = toDto(lesson);
+            if (Boolean.TRUE.equals(lesson.getIsFree()) || canAccessPaidLessons) {
+                lessonDtos.add(dto);
+            } else {
+                lessonDtos.add(toLockedDto(dto));
+            }
         }
         return lessonDtos;
     }
 
     @Override
     public LessonDTO getLesson(UUID lessonId) {
-        return toDto(lessonRepository.findById(lessonId).orElseThrow());
+        var user = resolveAuthenticatedUserOrNull();
+        var lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
+        var dto = toDto(lesson);
+        return canAccessFullLessonContent(lesson, user) ? dto : toLockedDto(dto);
     }
 
     @Override
@@ -111,5 +132,66 @@ public class LessonServiceImpl implements LessonService {
                 .createdAt(lesson.getCreatedAt())
                 .updatedAt(lesson.getUpdatedAt())
                 .build();
+    }
+
+    private LessonDTO toLockedDto(LessonDTO lesson) {
+        lesson.setVideoUrl(null);
+        lesson.setVideoUrl240p(null);
+        lesson.setVideoUrl360p(null);
+        lesson.setVideoUrl720p(null);
+        lesson.setEncryptedVideoUrl(null);
+        lesson.setDocumentUrl(null);
+        lesson.setContent(null);
+        lesson.setIsDownloadable(false);
+        return lesson;
+    }
+
+    private boolean canAccessPaidLessonsInCourse(UUID courseId, User user) {
+        if (user == null) return false;
+        if (isPrivileged(user)) return true;
+        if (isInstructorOfCourse(courseId, user)) return true;
+        return enrollmentRepository.findFirstByStudent_IdAndCourse_Id(user.getId(), courseId).isPresent();
+    }
+
+    private boolean canAccessFullLessonContent(Lesson lesson, User user) {
+        if (Boolean.TRUE.equals(lesson.getIsFree())) return true;
+        if (user == null) return false;
+        if (isPrivileged(user)) return true;
+        var courseId = lesson.getSection() != null && lesson.getSection().getCourse() != null
+                ? lesson.getSection().getCourse().getId()
+                : null;
+        var instructorUserId = lesson.getSection() != null
+                && lesson.getSection().getCourse() != null
+                && lesson.getSection().getCourse().getInstructor() != null
+                && lesson.getSection().getCourse().getInstructor().getUser() != null
+                ? lesson.getSection().getCourse().getInstructor().getUser().getId()
+                : null;
+        if (instructorUserId != null && instructorUserId.equals(user.getId())) return true;
+        if (courseId == null) return false;
+        return enrollmentRepository.findFirstByStudent_IdAndCourse_Id(user.getId(), courseId).isPresent();
+    }
+
+    private boolean isInstructorOfCourse(UUID courseId, User user) {
+        if (courseId == null || user == null) return false;
+        return courseSectionRepository.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
+                .findFirst()
+                .map(s -> s.getCourse())
+                .map(c -> c.getInstructor())
+                .map(i -> i.getUser())
+                .map(u -> user.getId().equals(u.getId()))
+                .orElse(false);
+    }
+
+    private boolean isPrivileged(User user) {
+        if (user == null || user.getRole() == null) return false;
+        return "ADMIN".equalsIgnoreCase(user.getRole());
+    }
+
+    private User resolveAuthenticatedUserOrNull() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            return null;
+        }
+        return userRepository.findByEmail(auth.getName()).orElse(null);
     }
 }

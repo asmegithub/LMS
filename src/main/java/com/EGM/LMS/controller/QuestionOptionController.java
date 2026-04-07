@@ -21,8 +21,10 @@ public class QuestionOptionController {
     }
 
     @GetMapping
-    ResponseEntity<List<QuestionOptionDTO>> getAllQuestionOptions() {
-        return ResponseEntity.ok(questionOptionService.getAllQuestionOptions());
+    ResponseEntity<List<QuestionOptionDTO>> getAllQuestionOptions(@RequestParam(required = false) UUID questionId,
+                                                                  @RequestParam(required = false) UUID quizId,
+                                                                  @RequestParam(required = false) UUID courseId) {
+        return ResponseEntity.ok(questionOptionService.getAllQuestionOptions(questionId, quizId, courseId));
     }
 
     @GetMapping("/{questionOptionId}")

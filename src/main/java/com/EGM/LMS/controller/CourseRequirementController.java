@@ -21,8 +21,8 @@ public class CourseRequirementController {
     }
 
     @GetMapping
-    ResponseEntity<List<CourseRequirementDTO>> getAllCourseRequirements() {
-        return ResponseEntity.ok(courseRequirementService.getAllCourseRequirements());
+    ResponseEntity<List<CourseRequirementDTO>> getAllCourseRequirements(@RequestParam(required = false) UUID courseId) {
+        return ResponseEntity.ok(courseRequirementService.getAllCourseRequirements(courseId));
     }
 
     @GetMapping("/{courseRequirementId}")

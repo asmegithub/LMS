@@ -2,12 +2,14 @@ package com.EGM.LMS.config;
 
 import com.EGM.LMS.security.JwtAuthenticationFilter;
 import com.EGM.LMS.security.OAuth2LoginSuccessHandler;
+import com.EGM.LMS.security.RbacAuthorityService;
 import com.EGM.LMS.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
@@ -22,6 +24,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -62,8 +65,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtDecoder jwtDecoder) {
-        return new JwtAuthenticationFilter(jwtDecoder, userSessionRepository);
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtDecoder jwtDecoder, RbacAuthorityService rbacAuthorityService, com.EGM.LMS.repository.UserRepository userRepository) {
+        return new JwtAuthenticationFilter(jwtDecoder, userSessionRepository, userRepository, rbacAuthorityService);
     }
 
     @Bean

@@ -3,6 +3,7 @@ package com.EGM.LMS.controller;
 import com.EGM.LMS.dto.PermissionDTO;
 import com.EGM.LMS.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/permissions")
+@PreAuthorize("hasAuthority('permissions.manage')")
 public class PermissionController {
     private final PermissionService permissionService;
 

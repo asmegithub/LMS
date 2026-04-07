@@ -3,6 +3,7 @@ package com.EGM.LMS.controller;
 import com.EGM.LMS.dto.InstructorProfileDTO;
 import com.EGM.LMS.service.InstructorProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -41,12 +42,14 @@ public class InstructorProfileController {
     }
 
     @GetMapping("/pending")
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<List<InstructorProfileDTO>> getPendingInstructorProfiles(Authentication authentication) {
         requireAdmin(authentication);
         return ResponseEntity.ok(instructorProfileService.getPendingInstructorProfiles());
     }
 
     @PutMapping("/{instructorProfileId}/verify")
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<InstructorProfileDTO> verifyInstructorProfile(
             @PathVariable UUID instructorProfileId,
             @RequestBody Map<String, Boolean> payload,
@@ -58,26 +61,31 @@ public class InstructorProfileController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<InstructorProfileDTO> createInstructorProfile(@RequestBody InstructorProfileDTO instructorProfileDto) {
         return ResponseEntity.ok(instructorProfileService.createInstructorProfile(instructorProfileDto));
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<List<InstructorProfileDTO>> getAllInstructorProfiles() {
         return ResponseEntity.ok(instructorProfileService.getAllInstructorProfiles());
     }
 
     @GetMapping("/{instructorProfileId}")
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<InstructorProfileDTO> getInstructorProfile(@PathVariable UUID instructorProfileId) {
         return ResponseEntity.ok(instructorProfileService.getInstructorProfile(instructorProfileId));
     }
 
     @PutMapping("/{instructorProfileId}")
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<InstructorProfileDTO> updateInstructorProfile(@PathVariable UUID instructorProfileId, @RequestBody InstructorProfileDTO instructorProfileDto) {
         return ResponseEntity.ok(instructorProfileService.updateInstructorProfile(instructorProfileId, instructorProfileDto));
     }
 
     @DeleteMapping("/{instructorProfileId}")
+    @PreAuthorize("hasAuthority('instructor-profiles.manage')")
     ResponseEntity<Void> deleteInstructorProfile(@PathVariable UUID instructorProfileId) {
         instructorProfileService.deleteInstructorProfile(instructorProfileId);
         return ResponseEntity.noContent().build();

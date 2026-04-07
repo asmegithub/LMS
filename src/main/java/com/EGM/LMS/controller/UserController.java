@@ -4,6 +4,7 @@ import com.EGM.LMS.dto.UserDTO;
 import com.EGM.LMS.service.AuditLogService;
 import com.EGM.LMS.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
+@PreAuthorize("hasAuthority('users.manage')")
 public class UserController {
     private final UserService userService;
     private final AuditLogService auditLogService;

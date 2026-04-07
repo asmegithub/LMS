@@ -4,6 +4,7 @@ import com.EGM.LMS.dto.CourseApprovalDTO;
 import com.EGM.LMS.service.AuditLogService;
 import com.EGM.LMS.service.CourseApprovalService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/course-approvals")
+@PreAuthorize("hasAuthority('courses.approve')")
 public class CourseApprovalController {
     private final CourseApprovalService courseApprovalService;
     private final AuditLogService auditLogService;

@@ -3,6 +3,7 @@ package com.EGM.LMS.controller;
 import com.EGM.LMS.dto.SystemSettingDTO;
 import com.EGM.LMS.service.SystemSettingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/system-settings")
+@PreAuthorize("hasAuthority('system.settings.manage')")
 public class SystemSettingController {
     private final SystemSettingService systemSettingService;
 

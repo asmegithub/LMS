@@ -21,8 +21,9 @@ public class QuizController {
     }
 
     @GetMapping
-    ResponseEntity<List<QuizDTO>> getAllQuizzes() {
-        return ResponseEntity.ok(quizService.getAllQuizzes());
+    ResponseEntity<List<QuizDTO>> getAllQuizzes(@RequestParam(required = false) UUID lessonId,
+                                                 @RequestParam(required = false) UUID courseId) {
+        return ResponseEntity.ok(quizService.getAllQuizzes(lessonId, courseId));
     }
 
     @GetMapping("/{quizId}")

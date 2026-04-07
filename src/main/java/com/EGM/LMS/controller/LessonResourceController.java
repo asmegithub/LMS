@@ -21,8 +21,9 @@ public class LessonResourceController {
     }
 
     @GetMapping
-    ResponseEntity<List<LessonResourceDTO>> getAllLessonResources() {
-        return ResponseEntity.ok(lessonResourceService.getAllLessonResources());
+    ResponseEntity<List<LessonResourceDTO>> getAllLessonResources(@RequestParam(required = false) UUID lessonId,
+                                                                  @RequestParam(required = false) UUID courseId) {
+        return ResponseEntity.ok(lessonResourceService.getAllLessonResources(lessonId, courseId));
     }
 
     @GetMapping("/{lessonResourceId}")

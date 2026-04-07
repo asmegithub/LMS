@@ -24,8 +24,12 @@ public class LessonResourceServiceImpl implements LessonResourceService {
     }
 
     @Override
-    public List<LessonResourceDTO> getAllLessonResources() {
-        var resources = lessonResourceRepository.findAll();
+    public List<LessonResourceDTO> getAllLessonResources(UUID lessonId, UUID courseId) {
+        var resources = lessonId != null
+                ? lessonResourceRepository.findAllByLesson_Id(lessonId)
+                : (courseId != null
+                    ? findResourcesByCourseId(courseId)
+                    : lessonResourceRepository.findAll());
         var resourceDtos = new java.util.ArrayList<LessonResourceDTO>();
         for (LessonResource resource : resources) {
             resourceDtos.add(toDto(resource));
@@ -64,6 +68,13 @@ public class LessonResourceServiceImpl implements LessonResourceService {
                 .fileSize(lessonResource.getFileSize() != null ? lessonResource.getFileSize() : 0)
                 .orderIndex(lessonResource.getOrderIndex() != null ? lessonResource.getOrderIndex() : 0)
                 .build();
+    }
+
+    private List<LessonResource> findResourcesByCourseId(UUID courseId) {
+        var lessons = lessonRepository.findBySection_Course_IdOrderBySection_OrderIndexAscOrderIndexAsc(courseId);
+        if (lessons.isEmpty()) return java.util.List.of();
+        var lessonIds = lessons.stream().map(lesson -> lesson.getId()).toList();
+        return lessonResourceRepository.findAllByLesson_IdIn(lessonIds);
     }
 
     private LessonResourceDTO toDto(LessonResource lessonResource) {

@@ -24,8 +24,12 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<QuestionDTO> getAllQuestions() {
-        var questions = questionRepository.findAll();
+    public List<QuestionDTO> getAllQuestions(UUID quizId, UUID courseId) {
+        var questions = quizId != null
+                ? questionRepository.findAllByQuiz_Id(quizId)
+                : (courseId != null
+                    ? findQuestionsByCourseId(courseId)
+                    : questionRepository.findAll());
         var questionDtos = new java.util.ArrayList<QuestionDTO>();
         for (Question question : questions) {
             questionDtos.add(toDto(question));
@@ -68,6 +72,13 @@ public class QuestionServiceImpl implements QuestionService {
                 .orderIndex(question.getOrderIndex())
                 .imageUrl(question.getImageUrl())
                 .build();
+    }
+
+    private List<Question> findQuestionsByCourseId(UUID courseId) {
+        var quizzes = quizRepository.findAllByLesson_Section_Course_Id(courseId);
+        if (quizzes.isEmpty()) return java.util.List.of();
+        var quizIds = quizzes.stream().map(q -> q.getId()).toList();
+        return questionRepository.findAllByQuiz_IdIn(quizIds);
     }
 
     private QuestionDTO toDto(Question question) {

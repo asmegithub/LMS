@@ -69,7 +69,9 @@ public class Lesson {
     /** * MIME type or extension of the associated document */
     private String documentType;
 
-    /** * Primary text content for the lesson (supports HTML/Markdown) */
+    /** * Primary text content for the lesson (supports long HTML/Markdown passages) */
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     /** * Sorting order within the section */

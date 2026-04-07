@@ -35,8 +35,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:ae22d8bb7896df828b652829e9db5655d49555b6dcf473d581f866dc4f94909d}
-    access-token-ttl-minutes: 15
-    refresh-token-ttl-days: 30
+    access-token-ttl-minutes: 20
+    refresh-token-ttl-hours: 1
   # Frontend URL where user lands after OAuth (with ?accessToken=...&refreshToken=...)
   # Frontend on 8081 -> use http://localhost:8081/auth
   oauth2:

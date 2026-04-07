@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,7 @@ public class InstructorPayoutRequestController {
     }
 
     @GetMapping("/pending")
+    @PreAuthorize("hasAuthority('payouts.manage')")
     public ResponseEntity<List<InstructorPayoutRequestDTO>> getPending() {
         return ResponseEntity.ok(instructorPayoutRequestService.getPending());
     }
@@ -90,6 +92,7 @@ public class InstructorPayoutRequestController {
     }
 
     @PostMapping(value = "/approve/{requestId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasAuthority('payouts.manage')")
     public ResponseEntity<InstructorPayoutRequestDTO> approve(
             @PathVariable UUID requestId,
             @RequestParam("file") MultipartFile file
@@ -99,12 +102,14 @@ public class InstructorPayoutRequestController {
     }
 
     @PostMapping("/reject/{requestId}")
+    @PreAuthorize("hasAuthority('payouts.manage')")
     public ResponseEntity<InstructorPayoutRequestDTO> reject(@PathVariable UUID requestId, @RequestBody Map<String, Object> body) {
         var reason = body != null && body.get("reason") != null ? String.valueOf(body.get("reason")) : null;
         return ResponseEntity.ok(instructorPayoutRequestService.reject(requestId, reason));
     }
 
     @GetMapping("/{requestId}/receipt")
+    @PreAuthorize("hasAuthority('payouts.manage')")
     ResponseEntity<byte[]> getReceipt(@PathVariable UUID requestId) throws IOException {
         InstructorPayoutRequestDTO dto = instructorPayoutRequestService.getById(requestId);
         if (dto.getReceiptUrl() == null || dto.getReceiptUrl().isBlank()) {

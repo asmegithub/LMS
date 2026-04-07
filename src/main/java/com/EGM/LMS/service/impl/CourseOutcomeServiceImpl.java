@@ -24,8 +24,10 @@ public class CourseOutcomeServiceImpl implements CourseOutcomeService {
     }
 
     @Override
-    public List<CourseOutcomeDTO> getAllCourseOutcomes() {
-        var outcomes = courseOutcomeRepository.findAll();
+    public List<CourseOutcomeDTO> getAllCourseOutcomes(UUID courseId) {
+        var outcomes = courseId != null
+                ? courseOutcomeRepository.findAllByCourse_Id(courseId)
+                : courseOutcomeRepository.findAll();
         var outcomeDtos = new java.util.ArrayList<CourseOutcomeDTO>();
         for (CourseOutcome outcome : outcomes) {
             outcomeDtos.add(toDto(outcome));
