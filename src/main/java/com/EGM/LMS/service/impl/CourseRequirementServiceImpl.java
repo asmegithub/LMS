@@ -41,7 +41,8 @@ public class CourseRequirementServiceImpl implements CourseRequirementService {
     }
 
     @Override
-    public CourseRequirementDTO updateCourseRequirement(UUID courseRequirementId, CourseRequirementDTO courseRequirement) {
+    public CourseRequirementDTO updateCourseRequirement(UUID courseRequirementId,
+            CourseRequirementDTO courseRequirement) {
         courseRequirementRepository.findById(courseRequirementId).orElseThrow();
         var entity = toEntity(courseRequirement);
         entity.setId(courseRequirementId);
@@ -61,14 +62,16 @@ public class CourseRequirementServiceImpl implements CourseRequirementService {
                 .textAm(courseRequirement.getTextAm())
                 .textOm(courseRequirement.getTextOm())
                 .textGz(courseRequirement.getTextGz())
-            .orderIndex(courseRequirement.getOrderIndex() != null ? courseRequirement.getOrderIndex() : 0)
+                .orderIndex(courseRequirement.getOrderIndex() != null ? courseRequirement.getOrderIndex() : 0)
                 .build();
     }
 
     private CourseRequirementDTO toDto(CourseRequirement courseRequirement) {
         return CourseRequirementDTO.builder()
                 .id(courseRequirement.getId())
-                .course(courseRequirement.getCourse() != null ? CourseDTO.builder().id(courseRequirement.getCourse().getId()).build() : null)
+                .course(courseRequirement.getCourse() != null
+                        ? CourseDTO.builder().id(courseRequirement.getCourse().getId()).build()
+                        : null)
                 .text(courseRequirement.getText())
                 .textAm(courseRequirement.getTextAm())
                 .textOm(courseRequirement.getTextOm())

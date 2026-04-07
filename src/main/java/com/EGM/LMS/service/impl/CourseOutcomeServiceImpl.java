@@ -9,7 +9,7 @@ import com.EGM.LMS.service.CourseOutcomeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;  
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -61,14 +61,16 @@ public class CourseOutcomeServiceImpl implements CourseOutcomeService {
                 .textAm(courseOutcome.getTextAm())
                 .textOm(courseOutcome.getTextOm())
                 .textGz(courseOutcome.getTextGz())
-            .orderIndex(courseOutcome.getOrderIndex() != null ? courseOutcome.getOrderIndex() : 0)
+                .orderIndex(courseOutcome.getOrderIndex() != null ? courseOutcome.getOrderIndex() : 0)
                 .build();
     }
 
     private CourseOutcomeDTO toDto(CourseOutcome courseOutcome) {
         return CourseOutcomeDTO.builder()
                 .id(courseOutcome.getId())
-                .course(courseOutcome.getCourse() != null ? CourseDTO.builder().id(courseOutcome.getCourse().getId()).build() : null)
+                .course(courseOutcome.getCourse() != null
+                        ? CourseDTO.builder().id(courseOutcome.getCourse().getId()).build()
+                        : null)
                 .text(courseOutcome.getText())
                 .textAm(courseOutcome.getTextAm())
                 .textOm(courseOutcome.getTextOm())

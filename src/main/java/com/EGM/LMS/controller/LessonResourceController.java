@@ -22,7 +22,7 @@ public class LessonResourceController {
 
     @GetMapping
     ResponseEntity<List<LessonResourceDTO>> getAllLessonResources(@RequestParam(required = false) UUID lessonId,
-                                                                  @RequestParam(required = false) UUID courseId) {
+            @RequestParam(required = false) UUID courseId) {
         return ResponseEntity.ok(lessonResourceService.getAllLessonResources(lessonId, courseId));
     }
 
@@ -32,7 +32,8 @@ public class LessonResourceController {
     }
 
     @PutMapping("/{lessonResourceId}")
-    ResponseEntity<LessonResourceDTO> updateLessonResource(@PathVariable UUID lessonResourceId, @RequestBody LessonResourceDTO lessonResourceDto) {
+    ResponseEntity<LessonResourceDTO> updateLessonResource(@PathVariable UUID lessonResourceId,
+            @RequestBody LessonResourceDTO lessonResourceDto) {
         return ResponseEntity.ok(lessonResourceService.updateLessonResource(lessonResourceId, lessonResourceDto));
     }
 

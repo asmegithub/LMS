@@ -36,16 +36,19 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    ResponseEntity<UserDTO> updateUser(@PathVariable UUID userId, @RequestBody UserDTO userDto, HttpServletRequest request) {
+    ResponseEntity<UserDTO> updateUser(@PathVariable UUID userId, @RequestBody UserDTO userDto,
+            HttpServletRequest request) {
         UserDTO updated = userService.updateUser(userId, userDto);
-        auditLogService.logAction("UPDATE_USER", "USER", userId.toString(), null, request.getRemoteAddr(), request.getHeader("User-Agent"));
+        auditLogService.logAction("UPDATE_USER", "USER", userId.toString(), null, request.getRemoteAddr(),
+                request.getHeader("User-Agent"));
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{userId}")
     ResponseEntity<Void> deleteUser(@PathVariable UUID userId, HttpServletRequest request) {
         userService.deleteUser(userId);
-        auditLogService.logAction("DELETE_USER", "USER", userId.toString(), null, request.getRemoteAddr(), request.getHeader("User-Agent"));
+        auditLogService.logAction("DELETE_USER", "USER", userId.toString(), null, request.getRemoteAddr(),
+                request.getHeader("User-Agent"));
         return ResponseEntity.noContent().build();
     }
 }

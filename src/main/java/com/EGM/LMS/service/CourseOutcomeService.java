@@ -7,8 +7,12 @@ import java.util.UUID;
 
 public interface CourseOutcomeService {
     CourseOutcomeDTO createCourseOutcome(CourseOutcomeDTO courseOutcome);
+
     List<CourseOutcomeDTO> getAllCourseOutcomes(UUID courseId);
+
     CourseOutcomeDTO getCourseOutcome(UUID courseOutcomeId);
+
     CourseOutcomeDTO updateCourseOutcome(UUID courseOutcomeId, CourseOutcomeDTO courseOutcome);
+
     void deleteCourseOutcome(UUID courseOutcomeId);
 }

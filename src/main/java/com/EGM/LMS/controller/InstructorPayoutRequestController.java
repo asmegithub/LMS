@@ -30,8 +30,7 @@ public class InstructorPayoutRequestController {
 
     public InstructorPayoutRequestController(
             InstructorPayoutRequestService instructorPayoutRequestService,
-            @Value("${app.payout-receipts.upload-dir:uploads/payout-receipts}") String uploadDir
-    ) {
+            @Value("${app.payout-receipts.upload-dir:uploads/payout-receipts}") String uploadDir) {
         this.instructorPayoutRequestService = instructorPayoutRequestService;
         this.uploadPath = Path.of(uploadDir).toAbsolutePath().normalize();
     }
@@ -68,12 +67,15 @@ public class InstructorPayoutRequestController {
         if (body.get("methodOptionId") instanceof String str) {
             methodOptionId = UUID.fromString(str);
         }
-        String payoutDetailsJson = body.get("payoutDetailsJson") != null ? String.valueOf(body.get("payoutDetailsJson")) : null;
-        return ResponseEntity.ok(instructorPayoutRequestService.requestPayout(amount, bankDetailId, methodOptionId, payoutDetailsJson));
+        String payoutDetailsJson = body.get("payoutDetailsJson") != null ? String.valueOf(body.get("payoutDetailsJson"))
+                : null;
+        return ResponseEntity.ok(
+                instructorPayoutRequestService.requestPayout(amount, bankDetailId, methodOptionId, payoutDetailsJson));
     }
 
     @PostMapping("/resubmit/{requestId}")
-    public ResponseEntity<InstructorPayoutRequestDTO> resubmit(@PathVariable UUID requestId, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<InstructorPayoutRequestDTO> resubmit(@PathVariable UUID requestId,
+            @RequestBody Map<String, Object> body) {
         var amountObj = body.get("amount");
         BigDecimal amount;
         if (amountObj instanceof Number n) {
@@ -87,23 +89,26 @@ public class InstructorPayoutRequestController {
         if (body.get("methodOptionId") instanceof String str) {
             methodOptionId = UUID.fromString(str);
         }
-        String payoutDetailsJson = body.get("payoutDetailsJson") != null ? String.valueOf(body.get("payoutDetailsJson")) : null;
-        return ResponseEntity.ok(instructorPayoutRequestService.resubmit(requestId, amount, methodOptionId, payoutDetailsJson));
+        String payoutDetailsJson = body.get("payoutDetailsJson") != null ? String.valueOf(body.get("payoutDetailsJson"))
+                : null;
+        return ResponseEntity
+                .ok(instructorPayoutRequestService.resubmit(requestId, amount, methodOptionId, payoutDetailsJson));
     }
 
     @PostMapping(value = "/approve/{requestId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        @PreAuthorize("hasAuthority('payouts.manage')")
+    @PreAuthorize("hasAuthority('payouts.manage')")
     public ResponseEntity<InstructorPayoutRequestDTO> approve(
             @PathVariable UUID requestId,
-            @RequestParam("file") MultipartFile file
-    ) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
         var stored = storeFile(file);
-        return ResponseEntity.ok(instructorPayoutRequestService.approve(requestId, stored.storedFileName, stored.originalFileName));
+        return ResponseEntity
+                .ok(instructorPayoutRequestService.approve(requestId, stored.storedFileName, stored.originalFileName));
     }
 
     @PostMapping("/reject/{requestId}")
     @PreAuthorize("hasAuthority('payouts.manage')")
-    public ResponseEntity<InstructorPayoutRequestDTO> reject(@PathVariable UUID requestId, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<InstructorPayoutRequestDTO> reject(@PathVariable UUID requestId,
+            @RequestBody Map<String, Object> body) {
         var reason = body != null && body.get("reason") != null ? String.valueOf(body.get("reason")) : null;
         return ResponseEntity.ok(instructorPayoutRequestService.reject(requestId, reason));
     }
@@ -127,18 +132,22 @@ public class InstructorPayoutRequestController {
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, contentType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (dto.getReceiptOriginalFileName() != null ? dto.getReceiptOriginalFileName() : filename) + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\""
+                        + (dto.getReceiptOriginalFileName() != null ? dto.getReceiptOriginalFileName() : filename)
+                        + "\"")
                 .body(bytes);
     }
 
-    private record StoredFile(String storedFileName, String originalFileName) {}
+    private record StoredFile(String storedFileName, String originalFileName) {
+    }
 
     private StoredFile storeFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File is empty.");
         }
         Files.createDirectories(uploadPath);
-        String original = org.springframework.util.StringUtils.cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
+        String original = org.springframework.util.StringUtils
+                .cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
         String extension = "";
         int dotIndex = original.lastIndexOf('.');
         if (dotIndex >= 0 && dotIndex < original.length() - 1) {

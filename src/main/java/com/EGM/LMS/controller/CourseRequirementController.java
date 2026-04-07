@@ -16,7 +16,8 @@ public class CourseRequirementController {
     private final CourseRequirementService courseRequirementService;
 
     @PostMapping
-    ResponseEntity<CourseRequirementDTO> createCourseRequirement(@RequestBody CourseRequirementDTO courseRequirementDto) {
+    ResponseEntity<CourseRequirementDTO> createCourseRequirement(
+            @RequestBody CourseRequirementDTO courseRequirementDto) {
         return ResponseEntity.ok(courseRequirementService.createCourseRequirement(courseRequirementDto));
     }
 
@@ -31,8 +32,10 @@ public class CourseRequirementController {
     }
 
     @PutMapping("/{courseRequirementId}")
-    ResponseEntity<CourseRequirementDTO> updateCourseRequirement(@PathVariable UUID courseRequirementId, @RequestBody CourseRequirementDTO courseRequirementDto) {
-        return ResponseEntity.ok(courseRequirementService.updateCourseRequirement(courseRequirementId, courseRequirementDto));
+    ResponseEntity<CourseRequirementDTO> updateCourseRequirement(@PathVariable UUID courseRequirementId,
+            @RequestBody CourseRequirementDTO courseRequirementDto) {
+        return ResponseEntity
+                .ok(courseRequirementService.updateCourseRequirement(courseRequirementId, courseRequirementDto));
     }
 
     @DeleteMapping("/{courseRequirementId}")

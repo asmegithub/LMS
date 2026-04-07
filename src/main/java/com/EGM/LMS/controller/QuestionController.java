@@ -22,7 +22,7 @@ public class QuestionController {
 
     @GetMapping
     ResponseEntity<List<QuestionDTO>> getAllQuestions(@RequestParam(required = false) UUID quizId,
-                                                      @RequestParam(required = false) UUID courseId) {
+            @RequestParam(required = false) UUID courseId) {
         return ResponseEntity.ok(questionService.getAllQuestions(quizId, courseId));
     }
 

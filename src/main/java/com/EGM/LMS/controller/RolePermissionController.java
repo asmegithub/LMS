@@ -33,7 +33,8 @@ public class RolePermissionController {
     }
 
     @PutMapping("/{rolePermissionId}")
-    ResponseEntity<RolePermissionDTO> updateRolePermission(@PathVariable UUID rolePermissionId, @RequestBody RolePermissionDTO rolePermissionDto) {
+    ResponseEntity<RolePermissionDTO> updateRolePermission(@PathVariable UUID rolePermissionId,
+            @RequestBody RolePermissionDTO rolePermissionDto) {
         return ResponseEntity.ok(rolePermissionService.updateRolePermission(rolePermissionId, rolePermissionDto));
     }
 

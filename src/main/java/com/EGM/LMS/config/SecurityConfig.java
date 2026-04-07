@@ -37,35 +37,39 @@ public class SecurityConfig {
     private String oauthRedirectUri;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/course-categories/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/course-sections/**", "/api/lessons/**", "/api/reviews/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/course-outcomes/**", "/api/course-requirements/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/lesson-discussions/**", "/api/discussion-replies/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
-                    .anyRequest().authenticated()
-                )
+                        .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/course-categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/course-sections/**", "/api/lessons/**",
+                                "/api/reviews/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/course-outcomes/**", "/api/course-requirements/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/lesson-discussions/**", "/api/discussion-replies/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
+                        .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
-                    .successHandler(oAuth2LoginSuccessHandler)
-                    .failureHandler((request, response, exception) -> {
-                        String redirect = buildOAuthFailureRedirect(exception);
-                        response.sendRedirect(redirect);
-                    })
-                )
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            String redirect = buildOAuthFailureRedirect(exception);
+                            response.sendRedirect(redirect);
+                        }))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtDecoder jwtDecoder, RbacAuthorityService rbacAuthorityService, com.EGM.LMS.repository.UserRepository userRepository) {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtDecoder jwtDecoder,
+            RbacAuthorityService rbacAuthorityService, com.EGM.LMS.repository.UserRepository userRepository) {
         return new JwtAuthenticationFilter(jwtDecoder, userSessionRepository, userRepository, rbacAuthorityService);
     }
 
@@ -73,9 +77,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
         var origins = List.of(allowedOrigins.split(",")).stream()
-            .map(String::trim)
-            .filter(origin -> !origin.isEmpty())
-            .toList();
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
         config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
@@ -88,12 +92,12 @@ public class SecurityConfig {
 
     private String buildOAuthFailureRedirect(AuthenticationException exception) {
         String message = exception != null && exception.getMessage() != null
-            ? exception.getMessage()
-            : "OAuth login failed";
+                ? exception.getMessage()
+                : "OAuth login failed";
         return UriComponentsBuilder.fromUriString(oauthRedirectUri)
-            .queryParam("oauthError", message)
-            .build()
-            .toUriString();
+                .queryParam("oauthError", message)
+                .build()
+                .toUriString();
     }
 
 }

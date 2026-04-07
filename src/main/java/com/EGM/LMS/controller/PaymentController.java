@@ -34,8 +34,7 @@ public class PaymentController {
     ResponseEntity<Void> chapaCallback(
             @RequestParam(name = "trx_ref", required = false) String trxRef,
             @RequestParam(name = "ref_id", required = false) String refId,
-            @RequestParam(name = "status", required = false) String status
-    ) {
+            @RequestParam(name = "status", required = false) String status) {
         paymentService.handleChapaCallback(trxRef, refId, status);
         return ResponseEntity.ok().build();
     }

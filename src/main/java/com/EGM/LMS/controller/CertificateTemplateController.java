@@ -18,7 +18,8 @@ public class CertificateTemplateController {
     private final CertificateTemplateService certificateTemplateService;
 
     @PostMapping
-    ResponseEntity<CertificateTemplateDTO> createCertificateTemplate(@RequestBody CertificateTemplateDTO certificateTemplateDto) {
+    ResponseEntity<CertificateTemplateDTO> createCertificateTemplate(
+            @RequestBody CertificateTemplateDTO certificateTemplateDto) {
         return ResponseEntity.ok(certificateTemplateService.createCertificateTemplate(certificateTemplateDto));
     }
 
@@ -33,8 +34,10 @@ public class CertificateTemplateController {
     }
 
     @PutMapping("/{certificateTemplateId}")
-    ResponseEntity<CertificateTemplateDTO> updateCertificateTemplate(@PathVariable UUID certificateTemplateId, @RequestBody CertificateTemplateDTO certificateTemplateDto) {
-        return ResponseEntity.ok(certificateTemplateService.updateCertificateTemplate(certificateTemplateId, certificateTemplateDto));
+    ResponseEntity<CertificateTemplateDTO> updateCertificateTemplate(@PathVariable UUID certificateTemplateId,
+            @RequestBody CertificateTemplateDTO certificateTemplateDto) {
+        return ResponseEntity.ok(
+                certificateTemplateService.updateCertificateTemplate(certificateTemplateId, certificateTemplateDto));
     }
 
     @DeleteMapping("/{certificateTemplateId}")

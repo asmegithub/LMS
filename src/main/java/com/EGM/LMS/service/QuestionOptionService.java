@@ -7,8 +7,12 @@ import java.util.UUID;
 
 public interface QuestionOptionService {
     QuestionOptionDTO createQuestionOption(QuestionOptionDTO questionOption);
+
     List<QuestionOptionDTO> getAllQuestionOptions(UUID questionId, UUID quizId, UUID courseId);
+
     QuestionOptionDTO getQuestionOption(UUID questionOptionId);
+
     QuestionOptionDTO updateQuestionOption(UUID questionOptionId, QuestionOptionDTO questionOption);
+
     void deleteQuestionOption(UUID questionOptionId);
 }

@@ -28,8 +28,8 @@ public class QuizServiceImpl implements QuizService {
         var quizzes = lessonId != null
                 ? quizRepository.findAllByLesson_Id(lessonId)
                 : (courseId != null
-                    ? quizRepository.findAllByLesson_Section_Course_Id(courseId)
-                    : quizRepository.findAll());
+                        ? quizRepository.findAllByLesson_Section_Course_Id(courseId)
+                        : quizRepository.findAll());
         var quizDtos = new java.util.ArrayList<QuizDTO>();
         for (Quiz q : quizzes) {
             quizDtos.add(toDto(q));

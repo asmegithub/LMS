@@ -31,10 +31,10 @@ public class QuizAttemptServiceImpl implements QuizAttemptService {
         var attempts = studentId != null && quizId != null
                 ? quizAttemptRepository.findAllByStudent_IdAndQuiz_Id(studentId, quizId)
                 : (studentId != null
-                    ? quizAttemptRepository.findAllByStudent_Id(studentId)
-                    : (quizId != null
-                        ? quizAttemptRepository.findAllByQuiz_Id(quizId)
-                        : quizAttemptRepository.findAll()));
+                        ? quizAttemptRepository.findAllByStudent_Id(studentId)
+                        : (quizId != null
+                                ? quizAttemptRepository.findAllByQuiz_Id(quizId)
+                                : quizAttemptRepository.findAll()));
         var attemptDtos = new java.util.ArrayList<QuizAttemptDTO>();
         for (QuizAttempt attempt : attempts) {
             attemptDtos.add(toDto(attempt));
@@ -79,8 +79,11 @@ public class QuizAttemptServiceImpl implements QuizAttemptService {
     private QuizAttemptDTO toDto(QuizAttempt quizAttempt) {
         return QuizAttemptDTO.builder()
                 .id(quizAttempt.getId())
-                .student(quizAttempt.getStudent() != null ? UserDTO.builder().id(quizAttempt.getStudent().getId()).build() : null)
-                .quiz(quizAttempt.getQuiz() != null ? QuizDTO.builder().id(quizAttempt.getQuiz().getId()).build() : null)
+                .student(quizAttempt.getStudent() != null
+                        ? UserDTO.builder().id(quizAttempt.getStudent().getId()).build()
+                        : null)
+                .quiz(quizAttempt.getQuiz() != null ? QuizDTO.builder().id(quizAttempt.getQuiz().getId()).build()
+                        : null)
                 .score(quizAttempt.getScore())
                 .totalPoints(quizAttempt.getTotalPoints())
                 .maxPoints(quizAttempt.getMaxPoints())

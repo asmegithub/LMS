@@ -22,7 +22,10 @@ public class PaymentAccountController {
         return ResponseEntity.ok(paymentAccountService.getActive());
     }
 
-    /** Admin: full list / CRUD. (Role enforcement relies on existing security setup.) */
+    /**
+     * Admin: full list / CRUD. (Role enforcement relies on existing security
+     * setup.)
+     */
     @GetMapping
     @PreAuthorize("hasAuthority('payment-accounts.manage')")
     ResponseEntity<List<PaymentAccountDTO>> getAll() {
@@ -54,4 +57,3 @@ public class PaymentAccountController {
         return ResponseEntity.noContent().build();
     }
 }
-

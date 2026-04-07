@@ -22,11 +22,13 @@ public class InstructorProfileController {
     private final InstructorProfileService instructorProfileService;
 
     @PostMapping("/apply")
-    ResponseEntity<InstructorProfileDTO> applyInstructorProfile(@RequestBody InstructorProfileDTO instructorProfileDto, Authentication authentication) {
+    ResponseEntity<InstructorProfileDTO> applyInstructorProfile(@RequestBody InstructorProfileDTO instructorProfileDto,
+            Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new ResponseStatusException(FORBIDDEN, "Authentication required.");
         }
-        return ResponseEntity.ok(instructorProfileService.applyInstructorProfile(instructorProfileDto, authentication.getName()));
+        return ResponseEntity
+                .ok(instructorProfileService.applyInstructorProfile(instructorProfileDto, authentication.getName()));
     }
 
     @GetMapping("/me")
@@ -53,8 +55,7 @@ public class InstructorProfileController {
     ResponseEntity<InstructorProfileDTO> verifyInstructorProfile(
             @PathVariable UUID instructorProfileId,
             @RequestBody Map<String, Boolean> payload,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         requireAdmin(authentication);
         boolean verified = Boolean.TRUE.equals(payload.get("verified"));
         return ResponseEntity.ok(instructorProfileService.verifyInstructorProfile(instructorProfileId, verified));
@@ -62,7 +63,8 @@ public class InstructorProfileController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('instructor-profiles.manage')")
-    ResponseEntity<InstructorProfileDTO> createInstructorProfile(@RequestBody InstructorProfileDTO instructorProfileDto) {
+    ResponseEntity<InstructorProfileDTO> createInstructorProfile(
+            @RequestBody InstructorProfileDTO instructorProfileDto) {
         return ResponseEntity.ok(instructorProfileService.createInstructorProfile(instructorProfileDto));
     }
 
@@ -80,8 +82,10 @@ public class InstructorProfileController {
 
     @PutMapping("/{instructorProfileId}")
     @PreAuthorize("hasAuthority('instructor-profiles.manage')")
-    ResponseEntity<InstructorProfileDTO> updateInstructorProfile(@PathVariable UUID instructorProfileId, @RequestBody InstructorProfileDTO instructorProfileDto) {
-        return ResponseEntity.ok(instructorProfileService.updateInstructorProfile(instructorProfileId, instructorProfileDto));
+    ResponseEntity<InstructorProfileDTO> updateInstructorProfile(@PathVariable UUID instructorProfileId,
+            @RequestBody InstructorProfileDTO instructorProfileDto) {
+        return ResponseEntity
+                .ok(instructorProfileService.updateInstructorProfile(instructorProfileId, instructorProfileDto));
     }
 
     @DeleteMapping("/{instructorProfileId}")

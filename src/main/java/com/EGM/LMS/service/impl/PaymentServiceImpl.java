@@ -57,14 +57,18 @@ public class PaymentServiceImpl implements PaymentService {
         var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
                 .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
 
-        if (setting.isEmpty()) return BigDecimal.ZERO;
+        if (setting.isEmpty())
+            return BigDecimal.ZERO;
         var raw = setting.get().getValue();
-        if (raw == null) return BigDecimal.ZERO;
+        if (raw == null)
+            return BigDecimal.ZERO;
 
         try {
             var pct = new BigDecimal(raw);
-            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
-            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            if (pct.compareTo(BigDecimal.ZERO) < 0)
+                return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0)
+                return new BigDecimal("100");
             return pct;
         } catch (Exception ignored) {
             return BigDecimal.ZERO;
@@ -72,21 +76,26 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private BigDecimal[] computeShares(BigDecimal amount) {
-        if (amount == null) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+        if (amount == null)
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO };
+        if (amount.compareTo(BigDecimal.ZERO) <= 0)
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO };
 
         var platformFeePercent = resolvePlatformFeePercent();
         var platformShare = amount
                 .multiply(platformFeePercent)
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
-        if (platformShare.compareTo(BigDecimal.ZERO) < 0) platformShare = BigDecimal.ZERO;
-        if (platformShare.compareTo(amount) > 0) platformShare = amount;
+        if (platformShare.compareTo(BigDecimal.ZERO) < 0)
+            platformShare = BigDecimal.ZERO;
+        if (platformShare.compareTo(amount) > 0)
+            platformShare = amount;
 
         var instructorShare = amount.subtract(platformShare);
-        if (instructorShare.compareTo(BigDecimal.ZERO) < 0) instructorShare = BigDecimal.ZERO;
+        if (instructorShare.compareTo(BigDecimal.ZERO) < 0)
+            instructorShare = BigDecimal.ZERO;
 
-        return new BigDecimal[]{platformShare, instructorShare};
+        return new BigDecimal[] { platformShare, instructorShare };
     }
 
     @Override
@@ -160,7 +169,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         List<UUID> courseIds = request.getCourseIds() != null && !request.getCourseIds().isEmpty()
-                ? request.getCourseIds() : null;
+                ? request.getCourseIds()
+                : null;
         if (courseIds == null && request.getCourseId() != null) {
             courseIds = List.of(request.getCourseId());
         }
@@ -174,12 +184,17 @@ public class PaymentServiceImpl implements PaymentService {
         return initializeChapaPaymentMulti(student, courseIds, request);
     }
 
-    private ChapaInitializeResponse initializeChapaPaymentSingle(User student, UUID courseId, ChapaInitializeRequest request) {
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+    private ChapaInitializeResponse initializeChapaPaymentSingle(User student, UUID courseId,
+            ChapaInitializeRequest request) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
         assertNotAlreadyEnrolled(student.getId(), course);
-        BigDecimal amount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                ? course.getDiscountPrice() : course.getPrice();
-        if (amount == null) amount = BigDecimal.ZERO;
+        BigDecimal amount = course.getDiscountPrice() != null
+                && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                        ? course.getDiscountPrice()
+                        : course.getPrice();
+        if (amount == null)
+            amount = BigDecimal.ZERO;
         String currency = course.getCurrency() != null ? course.getCurrency() : "ETB";
         String slug = request.getSlug() != null ? request.getSlug() : course.getId().toString();
 
@@ -200,7 +215,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         String txRef = CHAPA_TX_REF_PREFIX + payment.getId();
         String callbackUrl = chapaConfig.getCallbackBaseUrl() + "/api/payments/chapa/callback";
-        String returnUrl = chapaConfig.getFrontendBaseUrl() + "/courses/" + slug + "/checkout/success?paymentId=" + payment.getId();
+        String returnUrl = chapaConfig.getFrontendBaseUrl() + "/courses/" + slug + "/checkout/success?paymentId="
+                + payment.getId();
 
         String checkoutUrl = chapaService.initializeTransaction(
                 amount,
@@ -210,8 +226,7 @@ public class PaymentServiceImpl implements PaymentService {
                 student.getLastName(),
                 txRef,
                 callbackUrl,
-                returnUrl
-        );
+                returnUrl);
 
         return ChapaInitializeResponse.builder()
                 .checkoutUrl(checkoutUrl)
@@ -220,10 +235,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
-    private ChapaInitializeResponse initializeChapaPaymentMulti(User student, List<UUID> courseIds, ChapaInitializeRequest request) {
+    private ChapaInitializeResponse initializeChapaPaymentMulti(User student, List<UUID> courseIds,
+            ChapaInitializeRequest request) {
         List<Course> courses = courseIds.stream()
                 .distinct()
-                .map(courseId -> courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId)))
+                .map(courseId -> courseRepository.findById(courseId)
+                        .orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId)))
                 .toList();
         for (Course course : courses) {
             assertNotAlreadyEnrolled(student.getId(), course);
@@ -239,10 +256,14 @@ public class PaymentServiceImpl implements PaymentService {
         order = orderRepository.save(order);
 
         for (Course course : courses) {
-            BigDecimal lineAmount = course.getDiscountPrice() != null && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                    ? course.getDiscountPrice() : course.getPrice();
-            if (lineAmount == null) lineAmount = BigDecimal.ZERO;
-            if (currency == null || currency.isBlank()) currency = course.getCurrency() != null ? course.getCurrency() : "ETB";
+            BigDecimal lineAmount = course.getDiscountPrice() != null
+                    && course.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                            ? course.getDiscountPrice()
+                            : course.getPrice();
+            if (lineAmount == null)
+                lineAmount = BigDecimal.ZERO;
+            if (currency == null || currency.isBlank())
+                currency = course.getCurrency() != null ? course.getCurrency() : "ETB";
             totalAmount = totalAmount.add(lineAmount);
             OrderItem item = OrderItem.builder()
                     .order(order)
@@ -274,7 +295,8 @@ public class PaymentServiceImpl implements PaymentService {
         String callbackUrl = chapaConfig.getCallbackBaseUrl() + "/api/payments/chapa/callback";
         String returnUrl = chapaConfig.getFrontendBaseUrl() + "/cart/checkout/success?paymentId=" + payment.getId();
         if (request.getSlug() != null && !request.getSlug().isBlank()) {
-            returnUrl = chapaConfig.getFrontendBaseUrl() + "/" + request.getSlug().replaceFirst("^/", "") + "?paymentId=" + payment.getId();
+            returnUrl = chapaConfig.getFrontendBaseUrl() + "/" + request.getSlug().replaceFirst("^/", "")
+                    + "?paymentId=" + payment.getId();
         }
 
         String checkoutUrl = chapaService.initializeTransaction(
@@ -285,8 +307,7 @@ public class PaymentServiceImpl implements PaymentService {
                 student.getLastName(),
                 txRef,
                 callbackUrl,
-                returnUrl
-        );
+                returnUrl);
 
         return ChapaInitializeResponse.builder()
                 .checkoutUrl(checkoutUrl)
@@ -296,7 +317,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void assertNotAlreadyEnrolled(UUID studentId, Course course) {
-        if (studentId == null || course == null || course.getId() == null) return;
+        if (studentId == null || course == null || course.getId() == null)
+            return;
         boolean alreadyEnrolled = enrollmentRepository
                 .findFirstByStudent_IdAndCourse_Id(studentId, course.getId())
                 .isPresent();
@@ -402,7 +424,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .netAmount(payment.getNetAmount())
                 .platformShare(payment.getPlatformShare())
                 .instructorShare(payment.getInstructorShare())
-                .coupon(payment.getCoupon() != null ? CouponDTO.builder().id(payment.getCoupon().getId()).build() : null)
+                .coupon(payment.getCoupon() != null ? CouponDTO.builder().id(payment.getCoupon().getId()).build()
+                        : null)
                 .discountAmount(payment.getDiscountAmount())
                 .referralCode(payment.getReferralCode())
                 .referralDiscount(payment.getReferralDiscount())

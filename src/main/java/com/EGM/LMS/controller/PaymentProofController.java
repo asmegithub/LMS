@@ -32,8 +32,7 @@ public class PaymentProofController {
 
     public PaymentProofController(
             PaymentProofService paymentProofService,
-            @Value("${app.payment-proofs.upload-dir:uploads/payment-proofs}") String uploadDir
-    ) {
+            @Value("${app.payment-proofs.upload-dir:uploads/payment-proofs}") String uploadDir) {
         this.paymentProofService = paymentProofService;
         this.uploadPath = Path.of(uploadDir).toAbsolutePath().normalize();
     }
@@ -46,8 +45,7 @@ public class PaymentProofController {
             @RequestParam(value = "amount", required = false) String amount,
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "note", required = false) String note,
-            @RequestParam("file") MultipartFile file
-    ) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
         var stored = storeFile(file);
         BigDecimal parsedAmount = parseAmount(amount);
         return ResponseEntity.ok(paymentProofService.submitForCourse(
@@ -57,8 +55,7 @@ public class PaymentProofController {
                 currency,
                 stored.storedFileName,
                 stored.originalFileName,
-                note
-        ));
+                note));
     }
 
     /** Student: submit proof for a cart order. */
@@ -69,8 +66,7 @@ public class PaymentProofController {
             @RequestParam(value = "amount", required = false) String amount,
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "note", required = false) String note,
-            @RequestParam("file") MultipartFile file
-    ) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
         var stored = storeFile(file);
         BigDecimal parsedAmount = parseAmount(amount);
         return ResponseEntity.ok(paymentProofService.submitForOrder(
@@ -80,8 +76,7 @@ public class PaymentProofController {
                 currency,
                 stored.storedFileName,
                 stored.originalFileName,
-                note
-        ));
+                note));
     }
 
     /** Student: my proofs. */
@@ -117,7 +112,10 @@ public class PaymentProofController {
         return ResponseEntity.ok(paymentProofService.getById(proofId));
     }
 
-    /** Admin/authenticated: serve receipt file for preview (e.g. in admin dashboard). */
+    /**
+     * Admin/authenticated: serve receipt file for preview (e.g. in admin
+     * dashboard).
+     */
     @GetMapping("/{proofId}/receipt")
     @PreAuthorize("hasAuthority('payment-proofs.manage')")
     ResponseEntity<byte[]> serveReceipt(@PathVariable UUID proofId) throws IOException {
@@ -137,7 +135,9 @@ public class PaymentProofController {
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, contentType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (dto.getOriginalFileName() != null ? dto.getOriginalFileName() : filename) + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\""
+                                + (dto.getOriginalFileName() != null ? dto.getOriginalFileName() : filename) + "\"")
                 .body(bytes);
     }
 
@@ -146,25 +146,25 @@ public class PaymentProofController {
     ResponseEntity<PaymentProofDTO> resubmit(
             @PathVariable UUID proofId,
             @RequestParam(value = "note", required = false) String note,
-            @RequestParam("file") MultipartFile file
-    ) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
         var stored = storeFile(file);
         return ResponseEntity.ok(paymentProofService.resubmit(
                 proofId,
                 stored.storedFileName,
                 stored.originalFileName,
-                note
-        ));
+                note));
     }
 
-    private record StoredFile(String storedFileName, String originalFileName) {}
+    private record StoredFile(String storedFileName, String originalFileName) {
+    }
 
     private StoredFile storeFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File is empty.");
         }
         Files.createDirectories(uploadPath);
-        String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
+        String original = StringUtils
+                .cleanPath(file.getOriginalFilename() == null ? "file" : file.getOriginalFilename());
         String extension = "";
         int dotIndex = original.lastIndexOf('.');
         if (dotIndex >= 0 && dotIndex < original.length() - 1) {
@@ -179,7 +179,8 @@ public class PaymentProofController {
     }
 
     private BigDecimal parseAmount(String amount) {
-        if (amount == null || amount.isBlank()) return null;
+        if (amount == null || amount.isBlank())
+            return null;
         try {
             return new BigDecimal(amount.trim());
         } catch (Exception e) {
@@ -187,4 +188,3 @@ public class PaymentProofController {
         }
     }
 }
-

@@ -41,13 +41,17 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     private BigDecimal resolvePlatformFeePercent() {
         var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
                 .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
-        if (setting.isEmpty()) return BigDecimal.ZERO;
+        if (setting.isEmpty())
+            return BigDecimal.ZERO;
         var raw = setting.get().getValue();
-        if (raw == null) return BigDecimal.ZERO;
+        if (raw == null)
+            return BigDecimal.ZERO;
         try {
             var pct = new BigDecimal(raw);
-            if (pct.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
-            if (pct.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
+            if (pct.compareTo(BigDecimal.ZERO) < 0)
+                return BigDecimal.ZERO;
+            if (pct.compareTo(new BigDecimal("100")) > 0)
+                return new BigDecimal("100");
             return pct;
         } catch (Exception ignored) {
             return BigDecimal.ZERO;
@@ -55,41 +59,53 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     }
 
     private BigDecimal[] computeShares(BigDecimal amount) {
-        if (amount == null) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+        if (amount == null)
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO };
+        if (amount.compareTo(BigDecimal.ZERO) <= 0)
+            return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO };
 
         var platformFeePercent = resolvePlatformFeePercent();
         var platformShare = amount
                 .multiply(platformFeePercent)
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        if (platformShare.compareTo(BigDecimal.ZERO) < 0) platformShare = BigDecimal.ZERO;
-        if (platformShare.compareTo(amount) > 0) platformShare = amount;
+        if (platformShare.compareTo(BigDecimal.ZERO) < 0)
+            platformShare = BigDecimal.ZERO;
+        if (platformShare.compareTo(amount) > 0)
+            platformShare = amount;
         var instructorShare = amount.subtract(platformShare);
-        if (instructorShare.compareTo(BigDecimal.ZERO) < 0) instructorShare = BigDecimal.ZERO;
-        return new BigDecimal[]{platformShare, instructorShare};
+        if (instructorShare.compareTo(BigDecimal.ZERO) < 0)
+            instructorShare = BigDecimal.ZERO;
+        return new BigDecimal[] { platformShare, instructorShare };
     }
 
     @Override
     @Transactional
-    public PaymentProofDTO submitForCourse(UUID courseId, UUID paymentAccountId, BigDecimal amount, String currency, String storedFileName, String originalFileName, String note) {
+    public PaymentProofDTO submitForCourse(UUID courseId, UUID paymentAccountId, BigDecimal amount, String currency,
+            String storedFileName, String originalFileName, String note) {
         var student = resolveAuthenticatedUser();
         if (!"STUDENT".equalsIgnoreCase(student.getRole())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only students can submit payment proofs");
         }
-        if (courseId == null) throw new IllegalArgumentException("courseId is required");
-        if (paymentAccountId == null) throw new IllegalArgumentException("paymentAccountId is required");
-        if (storedFileName == null || storedFileName.isBlank()) throw new IllegalArgumentException("receipt file is required");
+        if (courseId == null)
+            throw new IllegalArgumentException("courseId is required");
+        if (paymentAccountId == null)
+            throw new IllegalArgumentException("paymentAccountId is required");
+        if (storedFileName == null || storedFileName.isBlank())
+            throw new IllegalArgumentException("receipt file is required");
 
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
         if (enrollmentRepository.findFirstByStudent_IdAndCourse_Id(student.getId(), courseId).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in this course");
         }
-        PaymentAccount account = paymentAccountRepository.findById(paymentAccountId).orElseThrow(() -> new IllegalArgumentException("Payment account not found"));
+        PaymentAccount account = paymentAccountRepository.findById(paymentAccountId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment account not found"));
         if (Boolean.FALSE.equals(account.getIsActive())) {
             throw new IllegalArgumentException("Payment account is not active");
         }
         BigDecimal safeAmount = amount != null ? amount : BigDecimal.ZERO;
-        String safeCurrency = (currency != null && !currency.isBlank()) ? currency : (course.getCurrency() != null ? course.getCurrency() : "ETB");
+        String safeCurrency = (currency != null && !currency.isBlank()) ? currency
+                : (course.getCurrency() != null ? course.getCurrency() : "ETB");
 
         PaymentProof proof = PaymentProof.builder()
                 .student(student)
@@ -107,37 +123,47 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         notificationService.notifyAdmins(
                 "PAYMENT_PROOF_SUBMITTED",
                 "Manual payment receipt submitted",
-                "A student submitted a payment receipt for course: " + (course.getTitle() != null ? course.getTitle() : course.getId()) + " (" + student.getEmail() + ")",
+                "A student submitted a payment receipt for course: "
+                        + (course.getTitle() != null ? course.getTitle() : course.getId()) + " (" + student.getEmail()
+                        + ")",
                 "PaymentProof",
                 proof.getId().toString(),
-                "/admin/payment-proofs"
-        );
+                "/admin/payment-proofs");
 
         return toDto(proof);
     }
 
     @Override
     @Transactional
-    public PaymentProofDTO submitForOrder(UUID orderId, UUID paymentAccountId, BigDecimal amount, String currency, String storedFileName, String originalFileName, String note) {
+    public PaymentProofDTO submitForOrder(UUID orderId, UUID paymentAccountId, BigDecimal amount, String currency,
+            String storedFileName, String originalFileName, String note) {
         var student = resolveAuthenticatedUser();
         if (!"STUDENT".equalsIgnoreCase(student.getRole())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only students can submit payment proofs");
         }
-        if (orderId == null) throw new IllegalArgumentException("orderId is required");
-        if (paymentAccountId == null) throw new IllegalArgumentException("paymentAccountId is required");
-        if (storedFileName == null || storedFileName.isBlank()) throw new IllegalArgumentException("receipt file is required");
+        if (orderId == null)
+            throw new IllegalArgumentException("orderId is required");
+        if (paymentAccountId == null)
+            throw new IllegalArgumentException("paymentAccountId is required");
+        if (storedFileName == null || storedFileName.isBlank())
+            throw new IllegalArgumentException("receipt file is required");
 
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        if (order.getStudent() == null || order.getStudent().getId() == null || !order.getStudent().getId().equals(student.getId())) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        if (order.getStudent() == null || order.getStudent().getId() == null
+                || !order.getStudent().getId().equals(student.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order does not belong to student");
         }
-        PaymentAccount account = paymentAccountRepository.findById(paymentAccountId).orElseThrow(() -> new IllegalArgumentException("Payment account not found"));
+        PaymentAccount account = paymentAccountRepository.findById(paymentAccountId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment account not found"));
         if (Boolean.FALSE.equals(account.getIsActive())) {
             throw new IllegalArgumentException("Payment account is not active");
         }
 
-        BigDecimal safeAmount = amount != null ? amount : (order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
-        String safeCurrency = (currency != null && !currency.isBlank()) ? currency : (order.getCurrency() != null ? order.getCurrency() : "ETB");
+        BigDecimal safeAmount = amount != null ? amount
+                : (order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+        String safeCurrency = (currency != null && !currency.isBlank()) ? currency
+                : (order.getCurrency() != null ? order.getCurrency() : "ETB");
 
         PaymentProof proof = PaymentProof.builder()
                 .student(student)
@@ -158,8 +184,7 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                 "A student submitted a cart payment receipt (order " + orderId + ") (" + student.getEmail() + ")",
                 "PaymentProof",
                 proof.getId().toString(),
-                "/admin/payment-proofs"
-        );
+                "/admin/payment-proofs");
 
         return toDto(proof);
     }
@@ -167,20 +192,24 @@ public class PaymentProofServiceImpl implements PaymentProofService {
     @Override
     public List<PaymentProofDTO> getMyProofs() {
         var student = resolveAuthenticatedUser();
-        return paymentProofRepository.findByStudent_IdOrderByCreatedAtDesc(student.getId()).stream().map(this::toDto).toList();
+        return paymentProofRepository.findByStudent_IdOrderByCreatedAtDesc(student.getId()).stream().map(this::toDto)
+                .toList();
     }
 
     @Override
     public List<PaymentProofDTO> getPending() {
-        return paymentProofRepository.findByStatusIgnoreCaseOrderByCreatedAtDesc("PENDING").stream().map(this::toDto).toList();
+        return paymentProofRepository.findByStatusIgnoreCaseOrderByCreatedAtDesc("PENDING").stream().map(this::toDto)
+                .toList();
     }
 
     @Override
     public PaymentProofDTO getById(UUID proofId) {
         var viewer = resolveAuthenticatedUser();
-        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        var proof = paymentProofRepository.findById(proofId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
         boolean isAdmin = "ADMIN".equalsIgnoreCase(viewer.getRole());
-        boolean isOwner = proof.getStudent() != null && proof.getStudent().getId() != null && proof.getStudent().getId().equals(viewer.getId());
+        boolean isOwner = proof.getStudent() != null && proof.getStudent().getId() != null
+                && proof.getStudent().getId().equals(viewer.getId());
         if (!isAdmin && !isOwner) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
         }
@@ -194,7 +223,8 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         if (!"ADMIN".equalsIgnoreCase(reviewer.getRole())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can approve");
         }
-        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        var proof = paymentProofRepository.findById(proofId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
         if (!"PENDING".equalsIgnoreCase(proof.getStatus())) {
             throw new IllegalStateException("Payment proof is not pending");
         }
@@ -241,9 +271,9 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                     proof.getStudent().getEmail(),
                     "Payment approved",
                     "PAYMENT",
-                    "SENT"
-            );
-        } catch (Exception ignored) {}
+                    "SENT");
+        } catch (Exception ignored) {
+        }
 
         return toDto(proof);
     }
@@ -255,7 +285,8 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         if (!"ADMIN".equalsIgnoreCase(reviewer.getRole())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can reject");
         }
-        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        var proof = paymentProofRepository.findById(proofId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
         if (!"PENDING".equalsIgnoreCase(proof.getStatus())) {
             throw new IllegalStateException("Payment proof is not pending");
         }
@@ -271,9 +302,9 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                     proof.getStudent().getEmail(),
                     "Payment rejected",
                     "PAYMENT",
-                    "SENT"
-            );
-        } catch (Exception ignored) {}
+                    "SENT");
+        } catch (Exception ignored) {
+        }
 
         return toDto(proof);
     }
@@ -288,8 +319,10 @@ public class PaymentProofServiceImpl implements PaymentProofService {
         if (storedFileName == null || storedFileName.isBlank()) {
             throw new IllegalArgumentException("receipt file is required");
         }
-        var proof = paymentProofRepository.findById(proofId).orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
-        if (proof.getStudent() == null || proof.getStudent().getId() == null || !proof.getStudent().getId().equals(student.getId())) {
+        var proof = paymentProofRepository.findById(proofId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment proof not found"));
+        if (proof.getStudent() == null || proof.getStudent().getId() == null
+                || !proof.getStudent().getId().equals(student.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Payment proof does not belong to student");
         }
         if (!"REJECTED".equalsIgnoreCase(proof.getStatus())) {
@@ -312,8 +345,7 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                 "A student resubmitted a payment receipt (" + student.getEmail() + ")",
                 "PaymentProof",
                 proof.getId().toString(),
-                "/admin/payments"
-        );
+                "/admin/payments");
 
         return toDto(proof);
     }
@@ -369,7 +401,9 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                 .student(studentDto)
                 .course(courseDto)
                 .order(orderDto)
-                .paymentAccount(p.getPaymentAccount() != null ? PaymentAccountDTO.builder().id(p.getPaymentAccount().getId()).build() : null)
+                .paymentAccount(p.getPaymentAccount() != null
+                        ? PaymentAccountDTO.builder().id(p.getPaymentAccount().getId()).build()
+                        : null)
                 .amount(p.getAmount())
                 .currency(p.getCurrency())
                 .status(p.getStatus())
@@ -385,4 +419,3 @@ public class PaymentProofServiceImpl implements PaymentProofService {
                 .build();
     }
 }
-

@@ -33,7 +33,8 @@ public class PermissionController {
     }
 
     @PutMapping("/{permissionId}")
-    ResponseEntity<PermissionDTO> updatePermission(@PathVariable UUID permissionId, @RequestBody PermissionDTO permissionDto) {
+    ResponseEntity<PermissionDTO> updatePermission(@PathVariable UUID permissionId,
+            @RequestBody PermissionDTO permissionDto) {
         return ResponseEntity.ok(permissionService.updatePermission(permissionId, permissionDto));
     }
 

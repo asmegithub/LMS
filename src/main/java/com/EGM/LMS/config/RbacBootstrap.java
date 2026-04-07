@@ -45,24 +45,42 @@ public class RbacBootstrap implements ApplicationRunner {
 
     private Map<String, Permission> ensurePermissions() {
         var permissions = new LinkedHashMap<String, Permission>();
-        permissions.put("rbac.manage", upsertPermission("rbac.manage", "Manage RBAC", "SECURITY", "Create and update roles and permissions."));
-        permissions.put("roles.manage", upsertPermission("roles.manage", "Manage Roles", "SECURITY", "Create, update, and delete roles."));
-        permissions.put("permissions.manage", upsertPermission("permissions.manage", "Manage Permissions", "SECURITY", "Create, update, and delete permissions."));
-        permissions.put("role-permissions.manage", upsertPermission("role-permissions.manage", "Manage Role Permissions", "SECURITY", "Assign and revoke permissions on roles."));
-        permissions.put("users.manage", upsertPermission("users.manage", "Manage Users", "USERS", "Create, update, and delete platform users."));
-        permissions.put("courses.approve", upsertPermission("courses.approve", "Approve Courses", "COURSES", "Review and approve course submissions."));
-        permissions.put("instructor-profiles.manage", upsertPermission("instructor-profiles.manage", "Manage Instructor Profiles", "USERS", "Review instructor applications and profiles."));
-        permissions.put("payment-accounts.manage", upsertPermission("payment-accounts.manage", "Manage Payment Accounts", "FINANCE", "Create and manage payout and payment accounts."));
-        permissions.put("payment-transactions.manage", upsertPermission("payment-transactions.manage", "Manage Payment Transactions", "FINANCE", "Create and manage payment transactions."));
-        permissions.put("payments.manage", upsertPermission("payments.manage", "Manage Payments", "FINANCE", "Create and manage payment records."));
-        permissions.put("payment-proofs.manage", upsertPermission("payment-proofs.manage", "Manage Payment Proofs", "FINANCE", "Review and approve payment proof uploads."));
-        permissions.put("payouts.manage", upsertPermission("payouts.manage", "Manage Payouts", "FINANCE", "Approve or reject payout requests."));
-        permissions.put("refunds.manage", upsertPermission("refunds.manage", "Manage Refunds", "FINANCE", "Create and manage refunds."));
-        permissions.put("user-sessions.manage", upsertPermission("user-sessions.manage", "Manage User Sessions", "SECURITY", "Inspect and revoke user sessions."));
-        permissions.put("system.settings.manage", upsertPermission("system.settings.manage", "Manage System Settings", "SYSTEM", "Create and edit platform settings."));
-        permissions.put("audit.logs.view", upsertPermission("audit.logs.view", "View Audit Logs", "SYSTEM", "Inspect the audit trail."));
-        permissions.put("email.logs.view", upsertPermission("email.logs.view", "View Email Logs", "SYSTEM", "Inspect email delivery logs."));
-        permissions.put("certificate-templates.manage", upsertPermission("certificate-templates.manage", "Manage Certificate Templates", "LEARNING", "Create and edit certificate templates."));
+        permissions.put("rbac.manage",
+                upsertPermission("rbac.manage", "Manage RBAC", "SECURITY", "Create and update roles and permissions."));
+        permissions.put("roles.manage",
+                upsertPermission("roles.manage", "Manage Roles", "SECURITY", "Create, update, and delete roles."));
+        permissions.put("permissions.manage", upsertPermission("permissions.manage", "Manage Permissions", "SECURITY",
+                "Create, update, and delete permissions."));
+        permissions.put("role-permissions.manage", upsertPermission("role-permissions.manage",
+                "Manage Role Permissions", "SECURITY", "Assign and revoke permissions on roles."));
+        permissions.put("users.manage", upsertPermission("users.manage", "Manage Users", "USERS",
+                "Create, update, and delete platform users."));
+        permissions.put("courses.approve", upsertPermission("courses.approve", "Approve Courses", "COURSES",
+                "Review and approve course submissions."));
+        permissions.put("instructor-profiles.manage", upsertPermission("instructor-profiles.manage",
+                "Manage Instructor Profiles", "USERS", "Review instructor applications and profiles."));
+        permissions.put("payment-accounts.manage", upsertPermission("payment-accounts.manage",
+                "Manage Payment Accounts", "FINANCE", "Create and manage payout and payment accounts."));
+        permissions.put("payment-transactions.manage", upsertPermission("payment-transactions.manage",
+                "Manage Payment Transactions", "FINANCE", "Create and manage payment transactions."));
+        permissions.put("payments.manage", upsertPermission("payments.manage", "Manage Payments", "FINANCE",
+                "Create and manage payment records."));
+        permissions.put("payment-proofs.manage", upsertPermission("payment-proofs.manage", "Manage Payment Proofs",
+                "FINANCE", "Review and approve payment proof uploads."));
+        permissions.put("payouts.manage",
+                upsertPermission("payouts.manage", "Manage Payouts", "FINANCE", "Approve or reject payout requests."));
+        permissions.put("refunds.manage",
+                upsertPermission("refunds.manage", "Manage Refunds", "FINANCE", "Create and manage refunds."));
+        permissions.put("user-sessions.manage", upsertPermission("user-sessions.manage", "Manage User Sessions",
+                "SECURITY", "Inspect and revoke user sessions."));
+        permissions.put("system.settings.manage", upsertPermission("system.settings.manage", "Manage System Settings",
+                "SYSTEM", "Create and edit platform settings."));
+        permissions.put("audit.logs.view",
+                upsertPermission("audit.logs.view", "View Audit Logs", "SYSTEM", "Inspect the audit trail."));
+        permissions.put("email.logs.view",
+                upsertPermission("email.logs.view", "View Email Logs", "SYSTEM", "Inspect email delivery logs."));
+        permissions.put("certificate-templates.manage", upsertPermission("certificate-templates.manage",
+                "Manage Certificate Templates", "LEARNING", "Create and edit certificate templates."));
         return permissions;
     }
 
@@ -72,8 +90,7 @@ public class RbacBootstrap implements ApplicationRunner {
         grant(roles.get(INSTRUCTOR), permissions, List.of(
                 "courses.approve",
                 "instructor-profiles.manage",
-                "certificate-templates.manage"
-        ));
+                "certificate-templates.manage"));
     }
 
     private void grant(Role role, Map<String, Permission> permissions, List<String> permissionNames) {
@@ -116,7 +133,8 @@ public class RbacBootstrap implements ApplicationRunner {
     }
 
     private void upsertMapping(Role role, Permission permission) {
-        if (rolePermissionRepository.existsByRole_NameIgnoreCaseAndPermission_NameIgnoreCase(role.getName(), permission.getName())) {
+        if (rolePermissionRepository.existsByRole_NameIgnoreCaseAndPermission_NameIgnoreCase(role.getName(),
+                permission.getName())) {
             return;
         }
         rolePermissionRepository.save(RolePermission.builder()

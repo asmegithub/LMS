@@ -28,8 +28,8 @@ public class LessonResourceServiceImpl implements LessonResourceService {
         var resources = lessonId != null
                 ? lessonResourceRepository.findAllByLesson_Id(lessonId)
                 : (courseId != null
-                    ? findResourcesByCourseId(courseId)
-                    : lessonResourceRepository.findAll());
+                        ? findResourcesByCourseId(courseId)
+                        : lessonResourceRepository.findAll());
         var resourceDtos = new java.util.ArrayList<LessonResourceDTO>();
         for (LessonResource resource : resources) {
             resourceDtos.add(toDto(resource));
@@ -72,7 +72,8 @@ public class LessonResourceServiceImpl implements LessonResourceService {
 
     private List<LessonResource> findResourcesByCourseId(UUID courseId) {
         var lessons = lessonRepository.findBySection_Course_IdOrderBySection_OrderIndexAscOrderIndexAsc(courseId);
-        if (lessons.isEmpty()) return java.util.List.of();
+        if (lessons.isEmpty())
+            return java.util.List.of();
         var lessonIds = lessons.stream().map(lesson -> lesson.getId()).toList();
         return lessonResourceRepository.findAllByLesson_IdIn(lessonIds);
     }
@@ -80,7 +81,9 @@ public class LessonResourceServiceImpl implements LessonResourceService {
     private LessonResourceDTO toDto(LessonResource lessonResource) {
         return LessonResourceDTO.builder()
                 .id(lessonResource.getId())
-                .lesson(lessonResource.getLesson() != null ? LessonDTO.builder().id(lessonResource.getLesson().getId()).build() : null)
+                .lesson(lessonResource.getLesson() != null
+                        ? LessonDTO.builder().id(lessonResource.getLesson().getId()).build()
+                        : null)
                 .title(lessonResource.getTitle())
                 .titleAm(lessonResource.getTitleAm())
                 .titleOm(lessonResource.getTitleOm())

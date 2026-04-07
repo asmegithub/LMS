@@ -34,8 +34,8 @@ public class QuizAnswerServiceImpl implements QuizAnswerService {
         var answers = attemptId != null
                 ? quizAnswerRepository.findAllByAttempt_Id(attemptId)
                 : (studentId != null
-                    ? quizAnswerRepository.findAllByAttempt_Student_Id(studentId)
-                    : quizAnswerRepository.findAll());
+                        ? quizAnswerRepository.findAllByAttempt_Student_Id(studentId)
+                        : quizAnswerRepository.findAll());
         var answerDtos = new java.util.ArrayList<QuizAnswerDTO>();
         for (QuizAnswer answer : answers) {
             answerDtos.add(toDto(answer));
@@ -77,9 +77,15 @@ public class QuizAnswerServiceImpl implements QuizAnswerService {
     private QuizAnswerDTO toDto(QuizAnswer quizAnswer) {
         return QuizAnswerDTO.builder()
                 .id(quizAnswer.getId())
-                .attempt(quizAnswer.getAttempt() != null ? QuizAttemptDTO.builder().id(quizAnswer.getAttempt().getId()).build() : null)
-                .question(quizAnswer.getQuestion() != null ? QuestionDTO.builder().id(quizAnswer.getQuestion().getId()).build() : null)
-                .selectedOption(quizAnswer.getSelectedOption() != null ? QuestionOptionDTO.builder().id(quizAnswer.getSelectedOption().getId()).build() : null)
+                .attempt(quizAnswer.getAttempt() != null
+                        ? QuizAttemptDTO.builder().id(quizAnswer.getAttempt().getId()).build()
+                        : null)
+                .question(quizAnswer.getQuestion() != null
+                        ? QuestionDTO.builder().id(quizAnswer.getQuestion().getId()).build()
+                        : null)
+                .selectedOption(quizAnswer.getSelectedOption() != null
+                        ? QuestionOptionDTO.builder().id(quizAnswer.getSelectedOption().getId()).build()
+                        : null)
                 .isCorrect(quizAnswer.isCorrect())
                 .pointsEarned(quizAnswer.getPointsEarned())
                 .createdAt(quizAnswer.getCreatedAt())

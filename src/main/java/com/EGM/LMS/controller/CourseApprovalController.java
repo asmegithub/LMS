@@ -42,9 +42,13 @@ public class CourseApprovalController {
             HttpServletRequest request) {
         CourseApprovalDTO updated = courseApprovalService.updateCourseApproval(courseApprovalId, courseApprovalDto);
         String status = courseApprovalDto.getStatus();
-        String action = "APPROVED".equalsIgnoreCase(status) ? "APPROVE_COURSE" : "REJECTED".equalsIgnoreCase(status) ? "REJECT_COURSE" : "UPDATE_COURSE_APPROVAL";
-        String targetId = updated.getCourse() != null ? updated.getCourse().getId() != null ? updated.getCourse().getId().toString() : null : null;
-        auditLogService.logAction(action, "COURSE", targetId, "status=" + status, request.getRemoteAddr(), request.getHeader("User-Agent"));
+        String action = "APPROVED".equalsIgnoreCase(status) ? "APPROVE_COURSE"
+                : "REJECTED".equalsIgnoreCase(status) ? "REJECT_COURSE" : "UPDATE_COURSE_APPROVAL";
+        String targetId = updated.getCourse() != null
+                ? updated.getCourse().getId() != null ? updated.getCourse().getId().toString() : null
+                : null;
+        auditLogService.logAction(action, "COURSE", targetId, "status=" + status, request.getRemoteAddr(),
+                request.getHeader("User-Agent"));
         return ResponseEntity.ok(updated);
     }
 

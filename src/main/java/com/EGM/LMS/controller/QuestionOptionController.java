@@ -22,8 +22,8 @@ public class QuestionOptionController {
 
     @GetMapping
     ResponseEntity<List<QuestionOptionDTO>> getAllQuestionOptions(@RequestParam(required = false) UUID questionId,
-                                                                  @RequestParam(required = false) UUID quizId,
-                                                                  @RequestParam(required = false) UUID courseId) {
+            @RequestParam(required = false) UUID quizId,
+            @RequestParam(required = false) UUID courseId) {
         return ResponseEntity.ok(questionOptionService.getAllQuestionOptions(questionId, quizId, courseId));
     }
 
@@ -33,7 +33,8 @@ public class QuestionOptionController {
     }
 
     @PutMapping("/{questionOptionId}")
-    ResponseEntity<QuestionOptionDTO> updateQuestionOption(@PathVariable UUID questionOptionId, @RequestBody QuestionOptionDTO questionOptionDto) {
+    ResponseEntity<QuestionOptionDTO> updateQuestionOption(@PathVariable UUID questionOptionId,
+            @RequestBody QuestionOptionDTO questionOptionDto) {
         return ResponseEntity.ok(questionOptionService.updateQuestionOption(questionOptionId, questionOptionDto));
     }
 

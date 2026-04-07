@@ -54,8 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userSessionRepository.save(session);
 
             var email = jwt.getSubject();
-                var user = userRepository.findByEmail(email).orElse(null);
-                var authorities = rbacAuthorityService.buildAuthorities(user);
+            var user = userRepository.findByEmail(email).orElse(null);
+            var authorities = rbacAuthorityService.buildAuthorities(user);
 
             var authentication = new UsernamePasswordAuthenticationToken(email, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);

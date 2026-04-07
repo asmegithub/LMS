@@ -33,7 +33,8 @@ public class UserSessionController {
     }
 
     @PutMapping("/{userSessionId}")
-    ResponseEntity<UserSessionDTO> updateUserSession(@PathVariable UUID userSessionId, @RequestBody UserSessionDTO userSessionDto) {
+    ResponseEntity<UserSessionDTO> updateUserSession(@PathVariable UUID userSessionId,
+            @RequestBody UserSessionDTO userSessionDto) {
         return ResponseEntity.ok(userSessionService.updateUserSession(userSessionId, userSessionDto));
     }
 

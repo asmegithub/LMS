@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface QuestionOptionRepository extends JpaRepository<QuestionOption, UUID> {
     List<QuestionOption> findAllByQuestion_Id(UUID questionId);
+
     List<QuestionOption> findAllByQuestion_IdIn(Collection<UUID> questionIds);
 }

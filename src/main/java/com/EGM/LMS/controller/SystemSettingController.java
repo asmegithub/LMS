@@ -33,7 +33,8 @@ public class SystemSettingController {
     }
 
     @PutMapping("/{systemSettingId}")
-    ResponseEntity<SystemSettingDTO> updateSystemSetting(@PathVariable UUID systemSettingId, @RequestBody SystemSettingDTO systemSettingDto) {
+    ResponseEntity<SystemSettingDTO> updateSystemSetting(@PathVariable UUID systemSettingId,
+            @RequestBody SystemSettingDTO systemSettingDto) {
         return ResponseEntity.ok(systemSettingService.updateSystemSetting(systemSettingId, systemSettingDto));
     }
 

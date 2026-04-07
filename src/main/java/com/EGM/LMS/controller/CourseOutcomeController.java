@@ -31,7 +31,8 @@ public class CourseOutcomeController {
     }
 
     @PutMapping("/{courseOutcomeId}")
-    ResponseEntity<CourseOutcomeDTO> updateCourseOutcome(@PathVariable UUID courseOutcomeId, @RequestBody CourseOutcomeDTO courseOutcomeDto) {
+    ResponseEntity<CourseOutcomeDTO> updateCourseOutcome(@PathVariable UUID courseOutcomeId,
+            @RequestBody CourseOutcomeDTO courseOutcomeDto) {
         return ResponseEntity.ok(courseOutcomeService.updateCourseOutcome(courseOutcomeId, courseOutcomeDto));
     }
 

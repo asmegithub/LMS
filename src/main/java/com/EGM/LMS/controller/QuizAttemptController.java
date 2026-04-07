@@ -22,7 +22,7 @@ public class QuizAttemptController {
 
     @GetMapping
     ResponseEntity<List<QuizAttemptDTO>> getAllQuizAttempts(@RequestParam(required = false) UUID studentId,
-                                                            @RequestParam(required = false) UUID quizId) {
+            @RequestParam(required = false) UUID quizId) {
         return ResponseEntity.ok(quizAttemptService.getAllQuizAttempts(studentId, quizId));
     }
 
@@ -32,7 +32,8 @@ public class QuizAttemptController {
     }
 
     @PutMapping("/{quizAttemptId}")
-    ResponseEntity<QuizAttemptDTO> updateQuizAttempt(@PathVariable UUID quizAttemptId, @RequestBody QuizAttemptDTO quizAttemptDto) {
+    ResponseEntity<QuizAttemptDTO> updateQuizAttempt(@PathVariable UUID quizAttemptId,
+            @RequestBody QuizAttemptDTO quizAttemptDto) {
         return ResponseEntity.ok(quizAttemptService.updateQuizAttempt(quizAttemptId, quizAttemptDto));
     }
 

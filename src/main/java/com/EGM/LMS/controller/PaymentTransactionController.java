@@ -18,7 +18,8 @@ public class PaymentTransactionController {
     private final PaymentTransactionService paymentTransactionService;
 
     @PostMapping
-    ResponseEntity<PaymentTransactionDTO> createPaymentTransaction(@RequestBody PaymentTransactionDTO paymentTransactionDto) {
+    ResponseEntity<PaymentTransactionDTO> createPaymentTransaction(
+            @RequestBody PaymentTransactionDTO paymentTransactionDto) {
         return ResponseEntity.ok(paymentTransactionService.createPaymentTransaction(paymentTransactionDto));
     }
 
@@ -33,8 +34,10 @@ public class PaymentTransactionController {
     }
 
     @PutMapping("/{paymentTransactionId}")
-    ResponseEntity<PaymentTransactionDTO> updatePaymentTransaction(@PathVariable UUID paymentTransactionId, @RequestBody PaymentTransactionDTO paymentTransactionDto) {
-        return ResponseEntity.ok(paymentTransactionService.updatePaymentTransaction(paymentTransactionId, paymentTransactionDto));
+    ResponseEntity<PaymentTransactionDTO> updatePaymentTransaction(@PathVariable UUID paymentTransactionId,
+            @RequestBody PaymentTransactionDTO paymentTransactionDto) {
+        return ResponseEntity
+                .ok(paymentTransactionService.updatePaymentTransaction(paymentTransactionId, paymentTransactionDto));
     }
 
     @DeleteMapping("/{paymentTransactionId}")
