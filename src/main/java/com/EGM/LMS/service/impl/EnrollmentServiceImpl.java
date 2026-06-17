@@ -49,6 +49,17 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EmailLogService emailLogService;
     private final SystemSettingService systemSettingService;
 
+    private boolean isStudentRole(String role) {
+        if (role == null) return false;
+        return "STUDENT".equalsIgnoreCase(role) || "ROLE_STUDENT".equalsIgnoreCase(role);
+    }
+
+    private void assertStudentRole(User user) {
+        if (user == null || !isStudentRole(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only students can enroll in courses");
+        }
+    }
+
     private BigDecimal resolvePlatformFeePercent() {
         var setting = systemSettingService.getSystemSettingByKey("PLATFORM_FEE_PERCENT")
                 .or(() -> systemSettingService.getSystemSettingByKey("PLATFORM_FEE"));
@@ -108,9 +119,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Transactional
     public EnrollmentDTO createEnrollment(EnrollmentDTO enrollment) {
         var student = resolveAuthenticatedUser();
-        if (!"STUDENT".equalsIgnoreCase(student.getRole())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only students can enroll in courses");
-        }
+        assertStudentRole(student);
 
         var courseId = enrollment.getCourse() != null ? enrollment.getCourse().getId() : null;
         if (courseId == null) {
@@ -187,6 +196,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (student == null || course == null) {
             throw new IllegalStateException("Payment must have student and course");
         }
+        assertStudentRole(student);
         var existing = enrollmentRepository.findFirstByStudent_IdAndCourse_Id(student.getId(), course.getId());
         if (existing.isPresent()) {
             return toDto(existing.get());
@@ -256,6 +266,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (student == null) {
             throw new IllegalStateException("Order must have student");
         }
+        assertStudentRole(student);
         var items = orderItemRepository.findByOrder_Id(orderId);
         var result = new java.util.ArrayList<EnrollmentDTO>();
         for (OrderItem item : items) {
