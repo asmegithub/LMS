@@ -9,7 +9,7 @@ spring:
       max-file-size: 1GB
       max-request-size: 1GB
   datasource:
-    url: jdbc:mysql://localhost:3306/LMS?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/LMSS?createDatabaseIfNotExist=true
     username: root
     password: mysql--2123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -56,3 +56,7 @@ app:
     vapid-public-key: ${VAPID_PUBLIC_KEY:BJncOefWZdkZUf4jp8yMnyL3ThQPFGLINQg88wrjy7jaX_uFIekHMuIzNdJsDUWvUVUavaZAdGc0gbo0geExVNU}
     vapid-private-key: ${VAPID_PRIVATE_KEY:jzuTceKJ1Q3FfEhTzLwKYaD9sKLHYE5Gkty6iWxeVOM}
     vapid-subject: ${VAPID_SUBJECT:mailto:asmareaau@gmail.com}
+  livekit:
+    api-key: ${LIVEKIT_API_KEY:API7oP9JEuuFxXB}
+    api-secret: ${LIVEKIT_API_SECRET:rLmcEJWletVl5wMeNCyX5gaub7vTjfPffBmG8YvxCceB}
+    url: ${LIVEKIT_URL:wss://betegubae-exdu2xir.livekit.cloud}
