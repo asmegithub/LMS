@@ -9,13 +9,15 @@ spring:
       max-file-size: 1GB
       max-request-size: 1GB
   datasource:
-    url: jdbc:mysql://localhost:3306/LMSS?createDatabaseIfNotExist=true
-    username: root
-    password: mysql--2123
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/lms}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres--2123}
+    driver-class-name: org.postgresql.Driver
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
+    open-in-view: false
   security:
     oauth2:
       client:
@@ -60,3 +62,5 @@ app:
     api-key: ${LIVEKIT_API_KEY:API7oP9JEuuFxXB}
     api-secret: ${LIVEKIT_API_SECRET:rLmcEJWletVl5wMeNCyX5gaub7vTjfPffBmG8YvxCceB}
     url: ${LIVEKIT_URL:wss://betegubae-exdu2xir.livekit.cloud}
+  seed:
+    admin-password: ${ADMIN_INITIAL_PASSWORD:Admin@Course2026!}
