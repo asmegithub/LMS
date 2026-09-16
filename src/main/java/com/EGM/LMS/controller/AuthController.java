@@ -46,4 +46,12 @@ public class AuthController {
         }
         return ResponseEntity.ok(authService.me(authentication.getName()));
     }
+
+    @PutMapping("/me")
+    ResponseEntity<UserDTO> updateMe(Authentication authentication, @RequestBody UserDTO updateRequest) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(authService.updateMe(authentication.getName(), updateRequest));
+    }
 }

@@ -45,6 +45,10 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(request.getLastName())
                 .role(normalizeRole(request.getRole()))
                 .language(request.getLanguage() != null ? request.getLanguage() : "en")
+                .parentName(request.getParentName())
+                .parentEmail(request.getParentEmail())
+                .parentPhone(request.getParentPhone())
+                .parentRelationship(request.getParentRelationship())
                 .isActive(true)
                 .isVerified(false)
                 .build();
@@ -142,6 +146,30 @@ public class AuthServiceImpl implements AuthService {
         }
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        return toDto(user);
+    }
+
+    @Override
+    public UserDTO updateMe(String email, UserDTO updateRequest) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email is required.");
+        }
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+
+        if (updateRequest.getFirstName() != null) user.setFirstName(updateRequest.getFirstName());
+        if (updateRequest.getLastName() != null) user.setLastName(updateRequest.getLastName());
+        if (updateRequest.getPhone() != null) user.setPhone(updateRequest.getPhone());
+        if (updateRequest.getBio() != null) user.setBio(updateRequest.getBio());
+        if (updateRequest.getTimezone() != null) user.setTimezone(updateRequest.getTimezone());
+        if (updateRequest.getLanguage() != null) user.setLanguage(updateRequest.getLanguage());
+        if (updateRequest.getProfileImage() != null) user.setProfileImage(updateRequest.getProfileImage());
+        if (updateRequest.getParentName() != null) user.setParentName(updateRequest.getParentName());
+        if (updateRequest.getParentEmail() != null) user.setParentEmail(updateRequest.getParentEmail());
+        if (updateRequest.getParentPhone() != null) user.setParentPhone(updateRequest.getParentPhone());
+        if (updateRequest.getParentRelationship() != null) user.setParentRelationship(updateRequest.getParentRelationship());
+
+        user = userRepository.save(user);
         return toDto(user);
     }
 
@@ -247,6 +275,10 @@ public class AuthServiceImpl implements AuthService {
                 .referralCode(user.getReferralCode())
                 .referredBy(user.getReferredBy())
                 .bio(user.getBio())
+                .parentName(user.getParentName())
+                .parentEmail(user.getParentEmail())
+                .parentPhone(user.getParentPhone())
+                .parentRelationship(user.getParentRelationship())
                 .timezone(user.getTimezone())
                 .lastLoginAt(user.getLastLoginAt())
                 .emailVerifiedAt(user.getEmailVerifiedAt())

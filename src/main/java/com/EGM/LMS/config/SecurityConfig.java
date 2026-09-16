@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/lesson-discussions/**", "/api/discussion-replies/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**", "/api/media/stream/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth

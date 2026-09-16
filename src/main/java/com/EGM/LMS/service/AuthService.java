@@ -12,5 +12,6 @@ public interface AuthService {
     AuthResponse refresh(RefreshRequest request);
     void logout(RefreshRequest request);
     UserDTO me(String email);
+    UserDTO updateMe(String email, UserDTO updateRequest);
     AuthResponse oauthLogin(String email, String firstName, String lastName, String profileImage, String ipAddress, String userAgent);
 }

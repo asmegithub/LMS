@@ -86,6 +86,22 @@ public class User {
      */
     private String bio;
 
+    /** * Parent / Guardian full name (optional for students)
+     */
+    private String parentName;
+
+    /** * Parent / Guardian email address (optional for students)
+     */
+    private String parentEmail;
+
+    /** * Parent / Guardian phone number (optional for students)
+     */
+    private String parentPhone;
+
+    /** * Relationship to student (e.g., Mother, Father, Guardian)
+     */
+    private String parentRelationship;
+
     /** * User's regional timezone (e.g., "Africa/Addis_Ababa")
      */
     private String timezone;

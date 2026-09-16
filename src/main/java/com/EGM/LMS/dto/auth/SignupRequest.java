@@ -16,4 +16,8 @@ public class SignupRequest {
     private String lastName;
     private String role;
     private String language;
+    private String parentName;
+    private String parentEmail;
+    private String parentPhone;
+    private String parentRelationship;
 }

@@ -69,6 +69,11 @@ public class UserDTO {
      */
     private String bio;
 
+    private String parentName;
+    private String parentEmail;
+    private String parentPhone;
+    private String parentRelationship;
+
     /** * User's regional timezone (e.g., "Africa/Addis_Ababa")
      */
     private String timezone;
