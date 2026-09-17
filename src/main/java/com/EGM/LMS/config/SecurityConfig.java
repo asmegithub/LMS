@@ -86,6 +86,7 @@ public class SecurityConfig {
         var config = new CorsConfiguration();
         var origins = List.of(allowedOrigins.split(",")).stream()
                 .map(String::trim)
+                .map(origin -> origin.replaceAll("/+$", ""))
                 .filter(origin -> !origin.isEmpty())
                 .toList();
         config.setAllowedOrigins(origins);

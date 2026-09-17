@@ -33,6 +33,8 @@ build/
 .vscode/
 
 ### App uploads ###
-uploads/payment-proofs/
-uploads/payout-receipts/
-uploads/certificates/
+uploads/*
+!uploads/.gitkeep
+
+### Render secrets ###
+render.env

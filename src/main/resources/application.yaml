@@ -10,13 +10,13 @@ spring:
       max-request-size: 1GB
   datasource:
     # Use JDBC_DATABASE_URL (jdbc:postgresql://...) — NOT Render's auto-injected
-    # DATABASE_URL which uses the non-JDBC postgresql:// scheme and will fail.
-    url: ${JDBC_DATABASE_URL:postgresql://lms_gjst_user:M1zWAvYNbb5i7r1LfjxCNUYmJfTAk055@dpg-dalf65942hec73c9bgh0-a/lms_gjst}
-    username: ${DB_USERNAME:lms_gjst_user}
-    password: ${DB_PASSWORD:M1zWAvYNbb5i7r1LfjxCNUYmJfTAk055}
+    # DATABASE_URL which uses the non-JDBC postgresql:// scheme.
+    url: ${JDBC_DATABASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lms}}
+    username: ${DB_USERNAME:${SPRING_DATASOURCE_USERNAME:postgres}}
+    password: ${DB_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
   jpa:
-    # database-platform is auto-detected from the driver; no need to set it explicitly
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     open-in-view: false
