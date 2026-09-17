@@ -89,7 +89,7 @@ public class SecurityConfig {
                 .map(origin -> origin.replaceAll("/+$", ""))
                 .filter(origin -> !origin.isEmpty())
                 .toList();
-        config.setAllowedOrigins(origins);
+        config.setAllowedOrigins(List.of("https://course-compass-gules-eight.vercel.app","http://localhost:8081"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
