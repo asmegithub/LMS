@@ -15,4 +15,13 @@ public interface SystemSettingService {
 
     /** Resolve a setting by key (e.g. "PLATFORM_FEE_PERCENT"). */
     Optional<SystemSettingDTO> getSystemSettingByKey(String key);
+
+    /** Retrieve all public settings. */
+    List<SystemSettingDTO> getPublicSystemSettings();
+
+    /** Upsert a setting by key. */
+    SystemSettingDTO upsertSystemSetting(SystemSettingDTO systemSetting);
+
+    /** Batch upsert settings. */
+    List<SystemSettingDTO> batchUpsertSystemSettings(List<SystemSettingDTO> systemSettings);
 }

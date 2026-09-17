@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**", "/api/media/stream/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/payments/chapa/callback").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/system-settings/public").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2LoginSuccessHandler)
@@ -84,11 +85,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
-        var origins = List.of(allowedOrigins.split(",")).stream()
-                .map(String::trim)
-                .map(origin -> origin.replaceAll("/+$", ""))
-                .filter(origin -> !origin.isEmpty())
-                .toList();
         config.setAllowedOrigins(List.of("https://course-compass-gules-eight.vercel.app","http://localhost:8081"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));

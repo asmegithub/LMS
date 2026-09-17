@@ -53,7 +53,49 @@ public class SystemSettingServiceImpl implements SystemSettingService {
     public Optional<SystemSettingDTO> getSystemSettingByKey(String key) {
         if (key == null || key.isBlank()) return Optional.empty();
         return systemSettingRepository.findFirstByKey(key)
+                .or(() -> systemSettingRepository.findFirstByKeyIgnoreCase(key))
                 .map(this::toDto);
+    }
+
+    @Override
+    public List<SystemSettingDTO> getPublicSystemSettings() {
+        return systemSettingRepository.findByIsPublicTrue().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Override
+    public SystemSettingDTO upsertSystemSetting(SystemSettingDTO dto) {
+        if (dto.getKey() == null || dto.getKey().isBlank()) {
+            throw new IllegalArgumentException("Setting key is required");
+        }
+        String trimmedKey = dto.getKey().trim();
+        SystemSetting entity = systemSettingRepository.findFirstByKey(trimmedKey)
+                .or(() -> systemSettingRepository.findFirstByKeyIgnoreCase(trimmedKey))
+                .orElseGet(() -> SystemSetting.builder().key(trimmedKey).build());
+
+        entity.setValue(dto.getValue());
+        if (dto.getDescription() != null) {
+            entity.setDescription(dto.getDescription());
+        }
+        if (dto.getIsPublic() != null) {
+            entity.setIsPublic(dto.getIsPublic());
+        }
+        if (dto.getUpdatedBy() != null) {
+            entity.setUpdatedBy(dto.getUpdatedBy());
+        }
+
+        return toDto(systemSettingRepository.save(entity));
+    }
+
+    @Override
+    public List<SystemSettingDTO> batchUpsertSystemSettings(List<SystemSettingDTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            return List.of();
+        }
+        return dtos.stream()
+                .map(this::upsertSystemSetting)
+                .toList();
     }
 
     private SystemSetting toEntity(SystemSettingDTO systemSetting) {
