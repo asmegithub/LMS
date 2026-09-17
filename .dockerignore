@@ -1,0 +1,25 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Maven build output (Stage 2 copies from Stage 1, not the host)
+target/
+
+# IDE and editor files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.DS_Store
+
+# Docs and local notes
+docs/
+*.md
+
+# Uploads (mounted as a volume on Render)
+uploads/
+
+# The old draft Dockerfile
+Dockerfile.docker

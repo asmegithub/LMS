@@ -1,6 +1,6 @@
 server:
-  # Use 8080 (default); 808 can cause BindException: Permission denied on some systems
-  port: ${SERVER_PORT:8080}
+  # Render injects PORT; fall back to SERVER_PORT, then 8080 for local dev
+  port: ${PORT:${SERVER_PORT:8080}}
 spring:
   application:
     name: LMS
